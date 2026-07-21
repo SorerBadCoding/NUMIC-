@@ -110,6 +110,18 @@ a { text-decoration: none; color: inherit; }
   flex-shrink: 0;
 }
 
+.num-brand-mark:has(img) {
+  background: #fff;
+  padding: 2px;
+}
+
+.num-brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+
 .num-brand-text small {
   display: block;
   font-weight: 500;
