@@ -46,7 +46,7 @@ Without a key, the page degrades gracefully to a building list.
 This repo includes a `render.yaml` Blueprint that provisions a web service + a
 Postgres database together.
 
-1. Push this repo to GitHub (it isn't a git repo yet — see below).
+1. Push this repo to GitHub.
 2. In the [Render dashboard](https://dashboard.render.com), click **New > Blueprint**
    and point it at the repo. Render reads `render.yaml` and creates:
    - a **free Postgres** database (`numportal-db`)
@@ -67,6 +67,34 @@ Notes:
 - Free web services spin down after inactivity, so the first request after a while
   will be slow (~30-60s cold start).
 - QR/camera-based attendance requires HTTPS, which Render provides automatically.
+
+## Deploying to Railway
+
+This repo includes a `railway.json` that tells Railway how to build and start the
+app (install deps + collect static at build time; migrate, seed demo data, then
+start `gunicorn` at deploy time).
+
+1. Push this repo to GitHub.
+2. In the [Railway dashboard](https://railway.app/new), create a **New Project >
+   Deploy from GitHub repo** and pick this repo.
+3. Add a database: in the project canvas, **New > Database > Add PostgreSQL**.
+4. Click into the web service > **Variables** tab and add a reference to the
+   database's connection string: **New Variable > Add Reference >** select the
+   Postgres service's `DATABASE_URL`. (Some Railway versions auto-link this for you
+   when both services are in the same project — check if it's already there first.)
+5. In the same Variables tab, add:
+   - `DJANGO_SECRET_KEY` — any long random string
+   - `DJANGO_DEBUG` — `0`
+   - `GOOGLE_MAPS_API_KEY` — the key from your local `.env`
+6. Go to the web service's **Settings > Networking** tab and click **Generate
+   Domain** to get a public `https://....up.railway.app` URL. `ALLOWED_HOSTS` and
+   `CSRF_TRUSTED_ORIGINS` pick this up automatically via Railway's
+   `RAILWAY_PUBLIC_DOMAIN` env var — no extra config needed.
+
+Notes:
+- Railway's free tier is trial-credit based (not time-limited like Render's), so a
+  low-traffic demo project like this typically runs for a while before costing anything.
+- No cold starts on Railway's standard plans — the service stays up.
 
 ## Architecture
 
