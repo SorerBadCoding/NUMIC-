@@ -140,6 +140,39 @@ button.num-class-card,
   100% { background-position: 40% 0%; }
 }
 
+/* Floating glow orbs — pure transform/opacity, GPU-cheap, drift behind the
+   text/stat cards (which sit at z-index:1) to add depth to the flat gradient. */
+.num-hero::before {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  top: -90px;
+  right: 6%;
+  background: radial-gradient(circle, rgba(255, 255, 255, .38), transparent 70%);
+  filter: blur(1px);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .num-hero::before {
+    animation: num-hero-orb-float-a 10s ease-in-out infinite alternate;
+  }
+  .num-hero::after {
+    animation: num-hero-orb-float-b 12s ease-in-out infinite alternate;
+  }
+}
+@keyframes num-hero-orb-float-a {
+  0%   { transform: translate(0, 0) scale(1); opacity: .6; }
+  50%  { transform: translate(-32px, 40px) scale(1.15); opacity: .9; }
+  100% { transform: translate(16px, -18px) scale(.92); opacity: .55; }
+}
+@keyframes num-hero-orb-float-b {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(24px, -20px) scale(1.1); }
+  100% { transform: translate(-18px, 14px) scale(.95); }
+}
+
 /* ---------------------------------------------------------------------- */
 /* Scroll reveal (below-the-fold cards fade up as they enter view)        */
 /* ---------------------------------------------------------------------- */
