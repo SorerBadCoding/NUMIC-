@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Attendance — NUM Student Portal{% endblock %}
+{% block content %}
+
+<div class="num-page-head">
+  <div>
+    <div class="num-page-title">Attendance Oversight</div>
+    <div class="num-page-sub">Live QR attendance sessions across campus right now.</div>
+  </div>
+</div>
+
+<div class="num-card num-card-pad">
+  {% if active_sessions %}
+  <div class="num-scroll-x">
+    <table class="num-table w-100">
+      <thead><tr><th>Subject</th><th>Teacher</th><th>Opened</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for s in active_sessions %}
+        <tr>
+          <td>{{ s.section.subject.name }}</td>
+          <td>{{ s.section.teacher.get_full_name|default:"—" }}</td>
+          <td>{{ s.opened_at|date:"H:i" }}</td>
+          <td><span class="num-badge bg-tint-green"><i class="bi bi-broadcast"></i> Live</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="num-empty">No attendance sessions are open right now.</div>
+  {% endif %}
+</div>
+{% endblock %}

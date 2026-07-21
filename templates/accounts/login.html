@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Sign in — NUM Student Portal{% endblock %}
+{% block guest_content %}
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;">
+  <div class="num-card" style="width:100%; max-width:920px; overflow:hidden; box-shadow: var(--shadow-lg);">
+    <div class="row g-0">
+      <div class="col-lg-5 d-none d-lg-flex flex-column justify-content-between p-5" style="background: var(--num-gradient); color:#fff;">
+        <div class="d-flex align-items-center gap-2">
+          <span class="num-brand-mark" style="background:rgba(255,255,255,.2);">NUM</span>
+          <strong>Student Portal</strong>
+        </div>
+        <div>
+          <h2 class="fw-bold mb-2" style="letter-spacing:-.02em;">Welcome back to your campus, online.</h2>
+          <p style="opacity:.9; font-size:14.5px;">Attendance, schedule, grades, and campus navigation for the National University of Management — Veal Sbov Campus.</p>
+        </div>
+        <div style="font-size:12.5px; opacity:.75;">© {% now "Y" %} National University of Management</div>
+      </div>
+      <div class="col-lg-7 p-5">
+        <h3 class="fw-bold mb-1">Sign in</h3>
+        <p class="text-secondary mb-4" style="font-size:14px;">Use your NUM student or staff account.</p>
+
+        {% if form.errors %}
+        <div class="num-card num-card-pad mb-3" style="border-left:4px solid var(--num-red); font-size:13.5px;">
+          Incorrect username or password. Please try again.
+        </div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold" style="font-size:13px;">Username</label>
+            <input type="text" name="username" class="form-control" style="border-radius:12px; padding:11px 14px;" required autofocus>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold" style="font-size:13px;">Password</label>
+            <input type="password" name="password" class="form-control" style="border-radius:12px; padding:11px 14px;" required>
+          </div>
+          <input type="hidden" name="next" value="{{ next }}">
+          <button type="submit" class="btn btn-num-primary w-100">Sign in</button>
+        </form>
+
+        <hr class="num-divider">
+        <p style="font-size:12.5px; color:var(--num-ink-500);">Demo accounts — password <code>num12345</code> for all:</p>
+        <div class="d-flex gap-2 flex-wrap" style="font-size:12px;">
+          <span class="num-badge bg-tint-blue">student1</span>
+          <span class="num-badge bg-tint-purple">teacher1</span>
+          <span class="num-badge bg-tint-amber">admin1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

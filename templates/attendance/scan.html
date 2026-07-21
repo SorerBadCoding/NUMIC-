@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Scan QR — NUM Student Portal{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js" rel="preload" as="script">
+{% endblock %}
+{% block content %}
+
+<div class="num-page-head">
+  <div>
+    <div class="num-page-title">Scan Attendance QR</div>
+    <div class="num-page-sub">Point your camera at the QR code your teacher is showing in class.</div>
+  </div>
+  <a href="{% url 'attendance:home' %}" class="btn btn-num-soft"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="row g-3 justify-content-center">
+  <div class="col-lg-6">
+    <div class="num-card num-card-pad">
+      <div id="qr-reader" style="border-radius: var(--radius-md); overflow:hidden;"></div>
+      <div id="scanStatus" class="mt-3"></div>
+      <div class="d-flex gap-2 mt-2" style="font-size:12px; color:var(--num-ink-500);">
+        <i class="bi bi-shield-check"></i>
+        <span>Attendance also verifies you're within {{ radius }}m of campus and enrolled in this subject.</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+const csrftoken = "{{ csrf_token }}";
+const statusEl = document.getElementById("scanStatus");
+let scanning = true;
+
+function setStatus(kind, message) {
+  const colors = { ok: "var(--num-green)", err: "var(--num-red)", info: "var(--num-blue-600)" };
+  statusEl.innerHTML = `<div class="num-card num-card-pad" style="border-left:4px solid ${colors[kind]}; font-size:13.5px;">${message}</div>`;
+}
+
+const html5QrCode = new Html5Qrcode("qr-reader");
+
+function onScanSuccess(decodedText) {
+  if (!scanning) return;
+  scanning = false;
+  html5QrCode.pause(true);
+  setStatus("info", "QR detected — checking your location…");
+
+  if (!navigator.geolocation) {
+    setStatus("err", "Your browser doesn't support location access, which is required for attendance.");
+    resumeAfterDelay();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => submitAttendance(decodedText, pos.coords.latitude, pos.coords.longitude),
+    () => {
+      setStatus("err", "Location permission is required to mark attendance. Please allow location access and try again.");
+      resumeAfterDelay();
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function submitAttendance(payload, lat, lng) {
+  const form = new FormData();
+  form.append("payload", payload);
+  form.append("lat", lat);
+  form.append("lng", lng);
+  form.append("device_timestamp", new Date().toISOString());
+
+  fetch("{% url 'attendance:submit' %}", { method: "POST", headers: { "X-CSRFToken": csrftoken }, body: form })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        setStatus("ok", `<i class="bi bi-check-circle-fill"></i> ${data.message}`);
+      } else {
+        setStatus("err", `<i class="bi bi-x-circle-fill"></i> ${data.message}`);
+      }
+      resumeAfterDelay();
+    })
+    .catch(() => { setStatus("err", "Network error — please try again."); resumeAfterDelay(); });
+}
+
+function resumeAfterDelay() {
+  setTimeout(() => { scanning = true; html5QrCode.resume(); }, 3000);
+}
+
+html5QrCode.start(
+  { facingMode: "environment" },
+  { fps: 10, qrbox: { width: 240, height: 240 } },
+  onScanSuccess
+).catch(() => {
+  setStatus("err", "Couldn't access your camera. Please allow camera permission and reload the page.");
+});
+</script>
+{% endblock %}

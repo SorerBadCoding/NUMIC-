@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Attendance — NUM Student Portal{% endblock %}
+{% block content %}
+
+<div class="num-page-head">
+  <div>
+    <div class="num-page-title">Attendance</div>
+    <div class="num-page-sub">Scan your teacher's QR code while you're in class to check in.</div>
+  </div>
+  <a href="{% url 'attendance:scan' %}" class="btn btn-num-primary"><i class="bi bi-qr-code-scan"></i> Scan QR Code</a>
+</div>
+
+<div class="num-card num-card-pad mb-3">
+  <div class="num-section-title mb-3">Today's Classes</div>
+  {% if rows %}
+  <div class="d-flex flex-column gap-2">
+    {% for row in rows %}
+    <div class="num-class-card align-items-center">
+      <div class="num-class-time">{{ row.section.duration_label }}</div>
+      <div class="flex-grow-1">
+        <div class="fw-semibold" style="font-size:14.5px;">{{ row.section.subject.name }}</div>
+        <div style="font-size:12.5px; color:var(--num-ink-500);"><i class="bi bi-geo-alt"></i> {% if row.section.room %}Room {{ row.section.room.code }}{% else %}TBA{% endif %}</div>
+      </div>
+      {% if row.marked %}
+        <span class="num-badge bg-tint-green"><i class="bi bi-check-circle"></i> Present</span>
+      {% elif row.session and row.session.is_active %}
+        <a href="{% url 'attendance:scan' %}" class="btn btn-num-primary btn-sm"><i class="bi bi-qr-code-scan"></i> Scan Now</a>
+      {% else %}
+        <span class="num-badge" style="background:var(--num-ink-100); color:var(--num-ink-500);">Not started</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="num-empty">No classes scheduled today.</div>
+  {% endif %}
+</div>
+
+<div class="num-card num-card-pad">
+  <div class="num-section-title mb-3">Recent Attendance</div>
+  {% if recent %}
+  <div class="num-scroll-x">
+    <table class="num-table w-100">
+      <thead><tr><th>Subject</th><th>Date</th><th>Time</th><th>Distance</th></tr></thead>
+      <tbody>
+        {% for r in recent %}
+        <tr>
+          <td>{{ r.session.section.subject.name }}</td>
+          <td>{{ r.session.date|date:"M j, Y" }}</td>
+          <td>{{ r.marked_at|date:"H:i" }}</td>
+          <td>{{ r.distance_meters|floatformat:0 }}m</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="num-empty">No attendance recorded yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

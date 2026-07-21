@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Campus Map — NUM Student Portal{% endblock %}
+{% block content %}
+
+<div class="num-page-head">
+  <div>
+    <div class="num-page-title">Campus Map</div>
+    <div class="num-page-sub">{{ campus_name }} — find your way around, get directions, and see walking times.</div>
+  </div>
+</div>
+
+{{ buildings_data|json_script:"buildings-data" }}
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    {% if google_maps_key %}
+    <div class="num-card" style="overflow:hidden; position:relative;">
+      <div id="campusMap"></div>
+      <div class="num-skeleton-overlay" id="mapSkeleton">
+        <div class="num-skeleton-label"><span class="num-skeleton-spinner"></span> Loading campus map…</div>
+      </div>
+    </div>
+    <div id="routeInfo" class="num-card num-card-pad mt-3" style="display:none;">
+      <div class="d-flex align-items-center gap-3">
+        <div class="num-stat-icon bg-tint-blue"><i class="bi bi-signpost-split"></i></div>
+        <div>
+          <div class="fw-semibold" id="routeDestination" style="font-size:14.5px;"></div>
+          <div style="font-size:12.5px; color:var(--num-ink-500);">Current Location → <span id="routeWalkTime"></span> walk</div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="num-card num-card-pad">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="num-stat-icon bg-tint-amber"><i class="bi bi-map"></i></div>
+        <div>
+          <div class="fw-semibold" style="font-size:15px;">Interactive map not configured yet</div>
+          <div style="font-size:12.5px; color:var(--num-ink-500);">Set <code>GOOGLE_MAPS_API_KEY</code> in the server environment to enable the live Google Map, walking directions, and ETA. The building directory below already works.</div>
+        </div>
+      </div>
+      <div class="row g-2">
+        {% for b in buildings %}
+        <div class="col-md-6">
+          <div class="num-class-card align-items-center">
+            <div style="font-size:20px;">{{ b.icon }}</div>
+            <div>
+              <div class="fw-semibold" style="font-size:13.5px;">{{ b.name }} <span class="text-secondary">({{ b.code }})</span></div>
+              <div style="font-size:12px; color:var(--num-ink-500);">{{ b.get_category_display }} · {{ b.opening_hours }}</div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="num-card num-card-pad">
+      <div class="num-section-title mb-3">Buildings</div>
+      <div class="d-flex flex-column gap-2" style="max-height:560px; overflow-y:auto;">
+        {% for b in buildings %}
+        <button type="button" class="num-class-card align-items-center text-start border-0 bg-white building-item" data-id="{{ b.id }}" style="cursor:pointer; width:100%;">
+          <div style="font-size:20px;">{{ b.icon }}</div>
+          <div class="flex-grow-1">
+            <div class="fw-semibold" style="font-size:13.5px;">{{ b.name }}</div>
+            <div style="font-size:12px; color:var(--num-ink-500);">{{ b.get_category_display }}</div>
+            {% if b.department_list %}<div style="font-size:11.5px; color:var(--num-ink-300);">{{ b.departments }}</div>{% endif %}
+          </div>
+          {% if google_maps_key %}<i class="bi bi-signpost-split text-secondary"></i>{% endif %}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if google_maps_key %}
+<script>
+  const NUM_CAMPUS = { lat: {{ campus_lat }}, lng: {{ campus_lng }} };
+  const BUILDINGS = JSON.parse(document.getElementById('buildings-data').textContent);
+  let map, directionsService, directionsRenderer, userMarker, userPos = null;
+  const buildingMarkers = {};
+
+  function pinIcon(emoji) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="18" fill="#2f6fed" stroke="white" stroke-width="3"/><text x="20" y="26" font-size="18" text-anchor="middle">${emoji}</text></svg>`;
+    return { url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg), scaledSize: new google.maps.Size(40, 40) };
+  }
+
+  window.initCampusMap = function () {
+    map = new google.maps.Map(document.getElementById("campusMap"), {
+      center: NUM_CAMPUS, zoom: 17, disableDefaultUI: false, mapId: "NUM_CAMPUS_MAP",
+    });
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true, polylineOptions: { strokeColor: "#2f6fed", strokeWeight: 5 } });
+
+    google.maps.event.addListenerOnce(map, "tilesloaded", () => {
+      window.NumAnim.hideSkeleton(document.getElementById("mapSkeleton"));
+    });
+
+    BUILDINGS.forEach((b) => {
+      const marker = new google.maps.Marker({ position: { lat: b.lat, lng: b.lng }, map, icon: pinIcon(b.icon), title: b.name });
+      const info = new google.maps.InfoWindow({
+        content: `<div style="font-family:Inter,sans-serif;min-width:180px;">
+          <strong>${b.name}</strong><br>
+          <span style="font-size:12px;color:#64748b;">${b.category}${b.departments.length ? ' · ' + b.departments.join(', ') : ''}</span><br>
+          <span style="font-size:12px;color:#64748b;">${b.hours}</span><br>
+          <button onclick="routeTo(${b.id})" style="margin-top:6px;background:#2f6fed;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;">Walking directions</button>
+        </div>`,
+      });
+      marker.addListener("click", () => info.open(map, marker));
+      buildingMarkers[b.id] = { marker, info };
+    });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        userMarker = new google.maps.Marker({
+          position: userPos, map,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: "#10b981", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3 },
+          title: "My Location",
+        });
+      });
+    }
+
+    document.querySelectorAll(".building-item").forEach((el) => {
+      el.addEventListener("click", () => {
+        const id = parseInt(el.dataset.id, 10);
+        const entry = buildingMarkers[id];
+        if (!entry) return;
+        map.panTo(entry.marker.getPosition());
+        map.setZoom(18);
+        entry.info.open(map, entry.marker);
+        routeTo(id);
+      });
+    });
+  };
+
+  window.routeTo = function (buildingId) {
+    const b = BUILDINGS.find((x) => x.id === buildingId);
+    if (!b) return;
+    const origin = userPos || NUM_CAMPUS;
+    directionsService.route(
+      { origin, destination: { lat: b.lat, lng: b.lng }, travelMode: google.maps.TravelMode.WALKING },
+      (result, status) => {
+        if (status === "OK") {
+          directionsRenderer.setDirections(result);
+          const leg = result.routes[0].legs[0];
+          document.getElementById("routeInfo").style.display = "block";
+          document.getElementById("routeDestination").textContent = "Route to " + b.name;
+          document.getElementById("routeWalkTime").textContent = leg.duration.text;
+        }
+      }
+    );
+  };
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&callback=initCampusMap" async defer></script>
+{% endif %}
+{% endblock %}

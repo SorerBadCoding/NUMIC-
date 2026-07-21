@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — NUM Student Portal{% endblock %}
+{% block content %}
+
+<div class="num-hero mb-4">
+  <div class="row align-items-center g-4" style="position:relative; z-index:1;">
+    <div class="col-lg-6">
+      <div style="font-size:13px; opacity:.85; font-weight:600;">Welcome back,</div>
+      <h1 class="fw-bold mb-2" style="font-size:30px; letter-spacing:-.02em;">{{ user.first_name }} {{ user.last_name }}</h1>
+      <div class="d-flex flex-wrap gap-2" style="font-size:13.5px;">
+        <span class="num-badge" style="background:rgba(255,255,255,.18); color:#fff;"><i class="bi bi-person-badge"></i>&nbsp;{{ profile.student_id }}</span>
+        <span class="num-badge" style="background:rgba(255,255,255,.18); color:#fff;"><i class="bi bi-mortarboard"></i>&nbsp;{{ profile.major }}</span>
+        <span class="num-badge" style="background:rgba(255,255,255,.18); color:#fff;"><i class="bi bi-layers"></i>&nbsp;{{ profile.year_semester_label }}</span>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="row g-2">
+        <div class="col-6 col-md-4">
+          <div class="num-hero-stat"><div class="label">Current GPA</div><div class="value">{{ gpa|default:"—" }}</div></div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="num-hero-stat"><div class="label">Attendance</div><div class="value">{% if attendance_pct is not None %}{{ attendance_pct }}%{% else %}—{% endif %}</div></div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="num-hero-stat"><div class="label">Subjects</div><div class="value">{{ subject_count }}</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="num-card hoverable num-stat-tile">
+      <div class="num-stat-icon bg-tint-green"><i class="bi bi-check2-circle"></i></div>
+      <div><div class="num-stat-value">{% if attendance_pct is not None %}{{ attendance_pct }}%{% else %}—{% endif %}</div><div class="num-stat-label">Attendance</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="num-card hoverable num-stat-tile">
+      <div class="num-stat-icon bg-tint-blue"><i class="bi bi-journal-bookmark"></i></div>
+      <div><div class="num-stat-value">{{ subject_count }}</div><div class="num-stat-label">Current Subjects</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="num-card hoverable num-stat-tile">
+      <div class="num-stat-icon bg-tint-amber"><i class="bi bi-clipboard-check"></i></div>
+      <div><div class="num-stat-value">{{ assignments_due_count }}</div><div class="num-stat-label">Assignments Due</div></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="num-card hoverable num-stat-tile">
+      <div class="num-stat-icon bg-tint-purple"><i class="bi bi-clock-history"></i></div>
+      <div><div class="num-stat-value">{{ upcoming_today_count }}</div><div class="num-stat-label">Upcoming Classes</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="num-card num-card-pad mb-3">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="num-section-title">Today's Classes</div>
+        <a href="{% url 'calendar_app:view' %}" style="font-size:13px; font-weight:600; color:var(--num-blue-600);">Full calendar →</a>
+      </div>
+      {% if todays_sections %}
+      <div class="d-flex flex-column gap-2">
+        {% for s in todays_sections %}
+        <div class="num-class-card">
+          <div class="num-class-time">{{ s.duration_label }}</div>
+          <div class="flex-grow-1">
+            <div class="fw-semibold" style="font-size:14.5px;">
+              {{ s.subject.name }}
+              {% if s.is_cancelled_today %}<span class="num-badge bg-tint-red ms-1"><i class="bi bi-x-circle"></i> No Class Today</span>{% endif %}
+            </div>
+            <div style="font-size:12.5px; color:var(--num-ink-500);">
+              <i class="bi bi-person"></i> {{ s.teacher.get_full_name|default:"TBA" }}
+              &nbsp;·&nbsp;<i class="bi bi-geo-alt"></i> {% if s.room %}Room {{ s.room.code }}{% else %}TBA{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="num-empty"><i class="bi bi-cup-hot" style="font-size:26px;"></i><div class="mt-2">No classes scheduled today. Enjoy your day!</div></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="num-card num-card-pad">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="num-section-title">Announcements</div>
+        <i class="bi bi-megaphone" style="color:var(--num-blue-500);"></i>
+      </div>
+      {% if announcements %}
+      <div class="d-flex flex-column gap-3">
+        {% for a in announcements %}
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            {% if a.pinned %}<span class="num-badge bg-tint-amber"><i class="bi bi-pin-angle-fill"></i> Pinned</span>{% endif %}
+            <div class="fw-semibold" style="font-size:13.5px;">{{ a.title }}</div>
+          </div>
+          <div style="font-size:12.5px; color:var(--num-ink-500);">{{ a.body|truncatewords:22 }}</div>
+          <div style="font-size:11px; color:var(--num-ink-300); margin-top:2px;">{{ a.created_at|timesince }} ago</div>
+        </div>
+        {% if not forloop.last %}<hr class="num-divider" style="margin:2px 0;">{% endif %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="num-empty">No announcements yet.</div>
+      {% endif %}
+    </div>
+
+    {% if assignments_due %}
+    <div class="num-card num-card-pad mt-3">
+      <div class="num-section-title mb-3">Upcoming Deadlines</div>
+      <div class="d-flex flex-column gap-2">
+        {% for ev in assignments_due %}
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold" style="font-size:13.5px;">{{ ev.title }}</div>
+            <div style="font-size:12px; color:var(--num-ink-500);">{{ ev.subject.code }}</div>
+          </div>
+          <span class="num-badge bg-tint-purple">{{ ev.start_datetime|date:"M j" }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

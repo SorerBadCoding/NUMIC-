@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Profile — NUM Student Portal{% endblock %}
+{% block content %}
+
+<div class="num-page-head">
+  <div>
+    <div class="num-page-title">Profile</div>
+    <div class="num-page-sub">Your account and academic summary.</div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="num-card num-card-pad text-center">
+      <div class="num-avatar mx-auto mb-3" style="width:88px; height:88px; border-radius:22px; font-size:30px;">
+        {% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:100%;height:100%;border-radius:22px;object-fit:cover;">
+        {% else %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% endif %}
+      </div>
+      <div class="fw-bold" style="font-size:18px;">{{ user.get_full_name }}</div>
+      <div style="font-size:13px; color:var(--num-ink-500);">
+        {% if profile %}{{ profile.student_id }} · {{ profile.major }}{% elif teacher_profile %}{{ teacher_profile.title }} · {{ teacher_profile.department }}{% else %}Administrator{% endif %}
+      </div>
+
+      <hr class="num-divider">
+
+      <div class="text-start d-flex flex-column gap-2" style="font-size:13.5px;">
+        <div class="d-flex justify-content-between"><span class="text-secondary">Email</span><span class="fw-semibold">{{ user.email }}</span></div>
+        <div class="d-flex justify-content-between"><span class="text-secondary">Phone</span><span class="fw-semibold">{{ user.phone|default:"—" }}</span></div>
+        {% if profile %}
+        <div class="d-flex justify-content-between"><span class="text-secondary">Year</span><span class="fw-semibold">Year {{ profile.year }}</span></div>
+        <div class="d-flex justify-content-between"><span class="text-secondary">Semester</span><span class="fw-semibold">Semester {{ profile.semester }}</span></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    {% if profile %}
+    <div class="row g-3 mb-3">
+      <div class="col-4">
+        <div class="num-card hoverable num-stat-tile">
+          <div class="num-stat-icon bg-tint-blue"><i class="bi bi-bar-chart"></i></div>
+          <div><div class="num-stat-value">{{ gpa|default:"—" }}</div><div class="num-stat-label">GPA</div></div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="num-card hoverable num-stat-tile">
+          <div class="num-stat-icon bg-tint-green"><i class="bi bi-check2-circle"></i></div>
+          <div><div class="num-stat-value">{% if attendance_pct is not None %}{{ attendance_pct }}%{% else %}—{% endif %}</div><div class="num-stat-label">Attendance</div></div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="num-card hoverable num-stat-tile">
+          <div class="num-stat-icon bg-tint-purple"><i class="bi bi-journal-bookmark"></i></div>
+          <div><div class="num-stat-value">{{ subjects|length }}</div><div class="num-stat-label">Subjects</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="num-card num-card-pad mb-3">
+      <div class="num-section-title mb-3">Enrolled Subjects</div>
+      <div class="d-flex flex-wrap gap-2">
+        {% for subj in subjects %}
+        <a href="{% url 'academics:subject_detail' subj.id %}" class="num-badge bg-tint-blue" style="font-size:12.5px; padding:8px 14px;">{{ subj.code }} — {{ subj.name }}</a>
+        {% empty %}
+        <div class="num-empty">No subjects enrolled yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="num-card num-card-pad">
+      <div class="num-section-title mb-3">Achievements</div>
+      {% if achievements %}
+      <div class="row g-2">
+        {% for ach in achievements %}
+        <div class="col-md-6">
+          <div class="num-class-card align-items-center">
+            <div style="font-size:22px;">{{ ach.icon }}</div>
+            <div>
+              <div class="fw-semibold" style="font-size:13.5px;">{{ ach.title }}</div>
+              <div style="font-size:12px; color:var(--num-ink-500);">{{ ach.description }} · {{ ach.awarded_on|date:"M Y" }}</div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="num-empty">No achievements yet — keep up the great work!</div>
+      {% endif %}
+    </div>
+    {% elif sections %}
+    <div class="num-card num-card-pad">
+      <div class="num-section-title mb-3">Teaching Sections</div>
+      {% for s in sections %}
+      <div class="num-class-card mb-2">
+        <div class="num-class-time">{{ s.get_weekday_display }}</div>
+        <div><div class="fw-semibold" style="font-size:14px;">{{ s.subject.code }} — {{ s.subject.name }}</div></div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

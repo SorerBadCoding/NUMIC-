@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Subjects — NUM Student Portal{% endblock %}
+{% block content %}
+
+<div class="num-page-head">
+  <div>
+    <div class="num-page-title">{% if user.is_student %}Your Subjects{% elif user.is_teacher %}Subjects You Teach{% else %}All Subjects{% endif %}</div>
+    <div class="num-page-sub">{{ items|length }} subject{{ items|length|pluralize }} this term.</div>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for item in items %}
+  <div class="col-md-6 col-xl-4">
+    <a href="{% url 'academics:subject_detail' item.subject.id %}" class="num-card hoverable num-card-pad d-block">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="num-badge bg-tint-blue">{{ item.subject.code }}</span>
+        <span class="num-badge bg-tint-purple">{{ item.subject.credits }} ECTS</span>
+      </div>
+      <div class="fw-bold mb-2" style="font-size:16px;">{{ item.subject.name }}</div>
+      <div class="d-flex flex-column gap-1" style="font-size:13px; color:var(--num-ink-500);">
+        <div><i class="bi bi-person"></i> {{ item.section.teacher.get_full_name|default:"TBA" }}</div>
+        <div><i class="bi bi-geo-alt"></i> {% if item.section.room %}Room {{ item.section.room.code }}, {{ item.section.room.building.name }}{% else %}TBA{% endif %}</div>
+        <div><i class="bi bi-calendar-week"></i> {{ item.section.get_weekday_display }} · {{ item.section.duration_label }}</div>
+      </div>
+    </a>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="num-card num-empty">No subjects to show yet.</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

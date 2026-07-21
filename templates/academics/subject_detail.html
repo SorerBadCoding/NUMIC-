@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}{{ subject.name }} — NUM Student Portal{% endblock %}
+{% block content %}
+
+<div class="num-page-head">
+  <div>
+    <div class="num-eyebrow">{{ subject.code }}</div>
+    <div class="num-page-title">{{ subject.name }}</div>
+    <div class="num-page-sub">
+      {{ subject.credits }} ECTS
+      {% if section %} · {{ section.teacher.get_full_name|default:"TBA" }} · {% if section.room %}Room {{ section.room.code }}{% endif %} · {{ section.get_weekday_display }} {{ section.duration_label }}{% endif %}
+    </div>
+  </div>
+  <a href="{% url 'academics:subject_list' %}" class="btn btn-num-soft"><i class="bi bi-arrow-left"></i> All subjects</a>
+</div>
+
+<div class="num-tabs">
+  <a class="num-tab {% if tab == 'materials' %}active{% endif %}" href="?tab=materials"><i class="bi bi-folder2-open"></i> Materials</a>
+  <a class="num-tab {% if tab == 'assignments' %}active{% endif %}" href="?tab=assignments"><i class="bi bi-clipboard-check"></i> Assignments</a>
+  {% if user.is_student %}
+  <a class="num-tab {% if tab == 'attendance' %}active{% endif %}" href="?tab=attendance"><i class="bi bi-qr-code-scan"></i> Attendance History</a>
+  <a class="num-tab {% if tab == 'grades' %}active{% endif %}" href="?tab=grades"><i class="bi bi-bar-chart"></i> Grades</a>
+  {% endif %}
+  <a class="num-tab {% if tab == 'announcements' %}active{% endif %}" href="?tab=announcements"><i class="bi bi-megaphone"></i> Announcements</a>
+</div>
+
+<div class="num-card num-card-pad">
+  {% if tab == 'materials' %}
+    {% for m in materials %}
+    <div class="num-class-card mb-2 align-items-center">
+      <div class="num-stat-icon bg-tint-blue" style="width:38px;height:38px;font-size:15px;"><i class="bi bi-file-earmark-text"></i></div>
+      <div class="flex-grow-1">
+        <div class="fw-semibold" style="font-size:14px;">{{ m.title }}</div>
+        <div style="font-size:12.5px; color:var(--num-ink-500);">{{ m.description }}</div>
+      </div>
+      {% if m.url %}<a href="{{ m.url }}" target="_blank" class="btn btn-num-soft btn-sm">Open</a>{% endif %}
+    </div>
+    {% empty %}
+    <div class="num-empty">No materials posted yet.</div>
+    {% endfor %}
+
+  {% elif tab == 'assignments' %}
+    {% for d in deadlines %}
+    <div class="num-class-card mb-2 align-items-center">
+      <div class="num-class-time">{{ d.start_datetime|date:"M j" }}</div>
+      <div class="flex-grow-1">
+        <div class="fw-semibold" style="font-size:14px;">{{ d.title }}</div>
+        <div style="font-size:12.5px; color:var(--num-ink-500);">{{ d.description }}</div>
+      </div>
+      {% if d.start_datetime < now %}<span class="num-badge bg-tint-red">Closed</span>{% else %}<span class="num-badge bg-tint-amber">Due {{ d.start_datetime|timeuntil }}</span>{% endif %}
+    </div>
+    {% empty %}
+    <div class="num-empty">No assignments posted yet.</div>
+    {% endfor %}
+
+  {% elif tab == 'attendance' %}
+    {% if attendance_history %}
+    <div class="num-scroll-x">
+      <table class="num-table w-100">
+        <thead><tr><th>Date</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for row in attendance_history %}
+          <tr>
+            <td>{{ row.session.date|date:"D, M j Y" }}</td>
+            <td>{% if row.present %}<span class="num-badge bg-tint-green"><i class="bi bi-check"></i> Present</span>{% else %}<span class="num-badge bg-tint-red"><i class="bi bi-x"></i> Absent</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="num-empty">No attendance sessions recorded yet.</div>
+    {% endif %}
+
+  {% elif tab == 'grades' %}
+    {% if grade %}
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="num-eyebrow mb-1">Assignments (20%)</div>
+        <div class="num-progress mb-1"><span style="width:{{ grade.assignment_score|default:0 }}%; background: var(--num-blue-500);"></span></div>
+        <div style="font-size:13px;">{{ grade.assignment_score|default:"—" }} / 100</div>
+      </div>
+      <div class="col-md-4">
+        <div class="num-eyebrow mb-1">Midterm (30%)</div>
+        <div class="num-progress mb-1"><span style="width:{{ grade.midterm_score|default:0 }}%;"></span></div>
+        <div style="font-size:13px;">{{ grade.midterm_score|default:"—" }} / 100</div>
+      </div>
+      <div class="col-md-4">
+        <div class="num-eyebrow mb-1">Final (50%)</div>
+        <div class="num-progress mb-1"><span style="width:{{ grade.final_score|default:0 }}%;"></span></div>
+        <div style="font-size:13px;">{{ grade.final_score|default:"—" }} / 100</div>
+      </div>
+    </div>
+    <hr class="num-divider">
+    <div class="d-flex align-items-center gap-3">
+      <div class="num-stat-icon bg-tint-purple"><i class="bi bi-award"></i></div>
+      <div><div class="num-stat-value">{{ grade.letter_grade }}</div><div class="num-stat-label">Overall grade{% if grade.total_score %} · {{ grade.total_score }}/100{% endif %}</div></div>
+    </div>
+    {% else %}
+    <div class="num-empty">Grades haven't been posted for this subject yet.</div>
+    {% endif %}
+
+  {% elif tab == 'announcements' %}
+    {% for a in announcements %}
+    <div class="mb-3">
+      <div class="fw-semibold" style="font-size:14px;">{{ a.title }}</div>
+      <div style="font-size:13px; color:var(--num-ink-500);">{{ a.body }}</div>
+      <div style="font-size:11.5px; color:var(--num-ink-300); margin-top:2px;">{{ a.created_at|timesince }} ago</div>
+    </div>
+    {% empty %}
+    <div class="num-empty">No announcements for this subject yet.</div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

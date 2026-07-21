@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{{ section.subject.name }} — Attendance{% endblock %}
+{% block content %}
+
+<div class="num-page-head">
+  <div>
+    <div class="num-eyebrow">{{ section.subject.code }} · {{ section.duration_label }}</div>
+    <div class="num-page-title">{{ section.subject.name }}</div>
+    <div class="num-page-sub">{% if section.room %}Room {{ section.room.code }}{% endif %} · {{ enrolled_count }} enrolled</div>
+  </div>
+  <button class="btn btn-num-soft" id="btnClose" style="color:#ef4444;"><i class="bi bi-stop-circle"></i> Close Attendance</button>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="num-card num-card-pad text-center">
+      <div class="num-eyebrow mb-2">Live QR Code</div>
+      <div class="num-qr-wrap">
+        <img id="qrImage" src="" alt="QR code">
+        <div class="num-qr-timer" id="qrTimer">--s</div>
+        <div class="num-skeleton-overlay" id="qrSkeleton" style="border-radius:var(--radius-lg);">
+          <div class="num-skeleton-spinner"></div>
+        </div>
+      </div>
+      <p class="mt-3 mb-0" style="font-size:12.5px; color:var(--num-ink-500);">
+        Refreshes automatically every {{ ttl }} seconds. Each code works once, for one student, inside campus grounds only.
+      </p>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="num-card num-card-pad">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="num-section-title">Checked In</div>
+        <span class="num-badge bg-tint-green" id="presentCount">0 present</span>
+      </div>
+      <div id="rosterList" class="d-flex flex-column gap-2">
+        <div class="num-skeleton-block" style="height:52px;"></div>
+        <div class="num-skeleton-block" style="height:52px;"></div>
+        <div class="num-skeleton-block" style="height:52px;"></div>
+      </div>
+      <div class="num-empty" id="rosterEmpty" style="display:none;">No students have checked in yet.</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const SESSION_ID = {{ session.id }};
+const csrftoken = "{{ csrf_token }}";
+
+function refreshQR() {
+  fetch(`/attendance/session/${SESSION_ID}/qr.json`).then(r => r.json()).then(data => {
+    if (!data.active) return;
+    document.getElementById("qrImage").src = data.image;
+    window.NumAnim.hideSkeleton(document.getElementById("qrSkeleton"));
+    startCountdown(data.expires_in);
+  });
+}
+
+let countdownTimer = null;
+function startCountdown(seconds) {
+  clearInterval(countdownTimer);
+  let remaining = seconds;
+  const el = document.getElementById("qrTimer");
+  el.textContent = remaining + "s";
+  countdownTimer = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) { clearInterval(countdownTimer); refreshQR(); return; }
+    el.textContent = remaining + "s";
+  }, 1000);
+}
+
+function refreshRoster() {
+  fetch(`/attendance/session/${SESSION_ID}/roster.json`).then(r => r.json()).then(data => {
+    document.getElementById("presentCount").textContent = data.count + " present";
+    const list = document.getElementById("rosterList");
+    const empty = document.getElementById("rosterEmpty");
+    empty.style.display = data.count ? "none" : "block";
+    list.innerHTML = data.records.map(r => `
+      <div class="num-class-card align-items-center">
+        <div class="num-stat-icon bg-tint-green" style="width:36px;height:36px;font-size:14px;"><i class="bi bi-check-lg"></i></div>
+        <div class="flex-grow-1">
+          <div class="fw-semibold" style="font-size:13.5px;">${r.name}</div>
+          <div style="font-size:12px; color:var(--num-ink-500);">${r.student_id} · ${r.distance}m from campus center</div>
+        </div>
+        <span style="font-size:12px; color:var(--num-ink-500);">${r.time}</span>
+      </div>`).join("");
+  });
+}
+
+document.getElementById("btnClose").addEventListener("click", () => {
+  if (!confirm("Close attendance for this class?")) return;
+  const form = new FormData();
+  fetch(`/attendance/session/${SESSION_ID}/close/`, { method: "POST", headers: { "X-CSRFToken": csrftoken }, body: form })
+    .then(() => { window.location.href = "{% url 'attendance:home' %}"; });
+});
+
+refreshQR();
+refreshRoster();
+setInterval(refreshRoster, 4000);
+</script>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}Calendar — NUM Student Portal{% endblock %}
+
+{% block content %}
+<div class="num-page-head">
+  <div>
+    <div class="num-page-title">Calendar</div>
+    <div class="num-page-sub">Class schedule, exams, deadlines, and university events.</div>
+  </div>
+  {% if is_admin %}
+  <div class="d-flex gap-2">
+    <button class="btn btn-num-soft" data-bs-toggle="modal" data-bs-target="#addSectionModal"><i class="bi bi-calendar-plus"></i> Add Class Schedule</button>
+    <button class="btn btn-num-primary" data-bs-toggle="modal" data-bs-target="#addEventModal"><i class="bi bi-plus-lg"></i> Add Event</button>
+  </div>
+  {% endif %}
+</div>
+
+<div class="num-card num-card-pad">
+  <div class="num-calendar-toolbar">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-num-soft btn-sm" id="calToday">Today</button>
+      <button class="btn btn-num-soft btn-sm" id="calPrev"><i class="bi bi-chevron-left"></i></button>
+      <button class="btn btn-num-soft btn-sm" id="calNext"><i class="bi bi-chevron-right"></i></button>
+      <span class="fw-bold ms-2" id="calTitle" style="font-size:15px;"></span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <div class="btn-group">
+        <button class="btn btn-num-soft btn-sm active" id="viewWeek">Weekly</button>
+        <button class="btn btn-num-soft btn-sm" id="viewMonth">Monthly</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-3 mb-3" style="font-size:12px;">
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2f6fed;"></span> Class</span>
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#f59e0b;"></span> Midterm</span>
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;"></span> Final</span>
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#8b5cf6;"></span> Deadline</span>
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#10b981;"></span> Holiday</span>
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#0ea5e9;"></span> University Event</span>
+    <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#94a3b8;"></span> Cancelled</span>
+  </div>
+
+  <div style="position:relative;">
+    <div id="calendar"></div>
+    <div class="num-skeleton-overlay" id="calSkeleton">
+      <div class="num-skeleton-label"><span class="num-skeleton-spinner"></span> Loading calendar…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Event details modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="detailsTitle">Details</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="detailsBody"></div>
+      <div class="modal-footer" id="detailsFooter"></div>
+    </div>
+  </div>
+</div>
+
+{% if is_admin %}
+<!-- Add event modal -->
+<div class="modal fade" id="addEventModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="addEventForm">
+        <div class="modal-header"><h5 class="modal-title">Add Event</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label">Event type</label>
+            <select class="form-select" name="event_type" required>
+              {% for value, label in event_types %}{% if value != 'class_cancelled' %}<option value="{{ value }}">{{ label }}</option>{% endif %}{% endfor %}
+            </select>
+          </div>
+          <div class="mb-3"><label class="form-label">Title</label><input class="form-control" name="title" required></div>
+          <div class="row">
+            <div class="col-6 mb-3"><label class="form-label">Starts</label><input type="datetime-local" class="form-control" name="start_datetime" required></div>
+            <div class="col-6 mb-3"><label class="form-label">Ends</label><input type="datetime-local" class="form-control" name="end_datetime" required></div>
+          </div>
+          <div class="mb-3"><label class="form-label">Subject (optional)</label>
+            <select class="form-select" name="subject"><option value="">— University-wide —</option>
+              {% for s in subjects %}<option value="{{ s.id }}">{{ s.code }} — {{ s.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-3"><label class="form-label">Room (optional)</label>
+            <select class="form-select" name="room"><option value="">—</option>
+              {% for r in rooms %}<option value="{{ r.id }}">{{ r.building.code }}{{ r.code }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-1"><label class="form-label">Description</label><textarea class="form-control" name="description" rows="2"></textarea></div>
+        </div>
+        <div class="modal-footer"><button type="submit" class="btn btn-num-primary w-100">Create Event</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add section modal -->
+<div class="modal fade" id="addSectionModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="addSectionForm">
+        <div class="modal-header"><h5 class="modal-title">Add Class Schedule</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label">Subject</label>
+            <select class="form-select" name="subject" required>{% for s in subjects %}<option value="{{ s.id }}">{{ s.code }} — {{ s.name }}</option>{% endfor %}</select>
+          </div>
+          <div class="mb-3"><label class="form-label">Teacher</label>
+            <select class="form-select" name="teacher"><option value="">TBA</option>{% for t in teachers %}<option value="{{ t.0 }}">{{ t.1 }} {{ t.2 }}</option>{% endfor %}</select>
+          </div>
+          <div class="mb-3"><label class="form-label">Room</label>
+            <select class="form-select" name="room"><option value="">TBA</option>{% for r in rooms %}<option value="{{ r.id }}">{{ r.building.code }}{{ r.code }}</option>{% endfor %}</select>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3"><label class="form-label">Weekday</label>
+              <select class="form-select" name="weekday" required>
+                <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+                <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+              </select>
+            </div>
+            <div class="col-6 mb-3"><label class="form-label">Term</label><input class="form-control" name="academic_term" value="Spring 2026"></div>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3"><label class="form-label">Start time</label><input type="time" class="form-control" name="start_time" required></div>
+            <div class="col-6 mb-3"><label class="form-label">End time</label><input type="time" class="form-control" name="end_time" required></div>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-1"><label class="form-label">Year</label><input type="number" min="1" max="4" class="form-control" name="year" value="1"></div>
+            <div class="col-6 mb-1"><label class="form-label">Semester</label><input type="number" min="1" max="2" class="form-control" name="semester" value="1"></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="submit" class="btn btn-num-primary w-100">Create Schedule</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script>
+const IS_ADMIN = {{ is_admin|yesno:"true,false" }};
+const csrftoken = "{{ csrf_token }}";
+
+function apiPost(url, data) {
+  const form = new FormData();
+  Object.entries(data).forEach(([k, v]) => form.append(k, v ?? ""));
+  return fetch(url, { method: "POST", headers: { "X-CSRFToken": csrftoken }, body: form }).then(r => r.json());
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const calendarEl = document.getElementById("calendar");
+  const calSkeleton = document.getElementById("calSkeleton");
+  const detailsModal = new bootstrap.Modal(document.getElementById("detailsModal"));
+
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: "timeGridWeek",
+    headerToolbar: false,
+    height: "auto",
+    slotMinTime: "06:00:00",
+    slotMaxTime: "20:00:00",
+    nowIndicator: true,
+    loading: function (isLoading) {
+      if (!calSkeleton) return;
+      isLoading ? window.NumAnim.showSkeleton(calSkeleton) : window.NumAnim.hideSkeleton(calSkeleton);
+    },
+    events: function (info, success, failure) {
+      fetch(`{% url 'calendar_app:events_json' %}?start=${info.startStr}&end=${info.endStr}`)
+        .then(r => r.json())
+        .then(data => success(data.map(e => ({
+          id: e.id, title: e.title, start: e.start, end: e.end,
+          color: e.color, allDay: e.all_day || false, extendedProps: e,
+        }))))
+        .catch(failure);
+    },
+    datesSet: function (info) {
+      document.getElementById("calTitle").textContent = info.view.title;
+    },
+    eventClick: function (info) {
+      showDetails(info.event.extendedProps);
+    },
+  });
+  calendar.render();
+
+  document.getElementById("calToday").onclick = () => calendar.today();
+  document.getElementById("calPrev").onclick = () => calendar.prev();
+  document.getElementById("calNext").onclick = () => calendar.next();
+  document.getElementById("viewWeek").onclick = (e) => { calendar.changeView("timeGridWeek"); toggleViewBtn(e.target); };
+  document.getElementById("viewMonth").onclick = (e) => { calendar.changeView("dayGridMonth"); toggleViewBtn(e.target); };
+  function toggleViewBtn(btn) {
+    document.querySelectorAll("#viewWeek, #viewMonth").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+
+  function showDetails(props) {
+    const title = document.getElementById("detailsTitle");
+    const body = document.getElementById("detailsBody");
+    const footer = document.getElementById("detailsFooter");
+    footer.innerHTML = "";
+
+    if (props.kind === "class") {
+      title.textContent = props.subject_name;
+      body.innerHTML = `
+        <div class="d-flex flex-column gap-2" style="font-size:13.5px;">
+          <div><i class="bi bi-clock"></i> ${new Date(props.start).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} – ${new Date(props.end).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+          <div><i class="bi bi-person"></i> ${props.teacher}</div>
+          <div><i class="bi bi-geo-alt"></i> ${props.room}${props.building ? ", " + props.building : ""}</div>
+          ${props.cancelled ? `<div class="num-badge bg-tint-red" style="width:fit-content;"><i class="bi bi-x-circle"></i> Cancelled — ${props.cancel_reason || ""}</div>` : ""}
+        </div>`;
+      if (IS_ADMIN) {
+        if (props.cancelled) {
+          footer.innerHTML = `<button class="btn btn-num-soft w-100" id="btnRestore">Restore Class</button>`;
+          document.getElementById("btnRestore").onclick = () => apiPost("{% url 'calendar_app:restore_occurrence' %}", { section_id: props.section_id, date: props.date }).then(() => { detailsModal.hide(); calendar.refetchEvents(); });
+        } else {
+          footer.innerHTML = `<button class="btn btn-num-soft" id="btnCancelClass">Mark No Class Today</button>`;
+          document.getElementById("btnCancelClass").onclick = () => apiPost("{% url 'calendar_app:cancel_occurrence' %}", { section_id: props.section_id, date: props.date, reason: "No Class Today" }).then(() => { detailsModal.hide(); calendar.refetchEvents(); });
+        }
+      }
+    } else {
+      title.textContent = props.event_type_label + ": " + props.title;
+      body.innerHTML = `
+        <div class="d-flex flex-column gap-2" style="font-size:13.5px;">
+          <div><i class="bi bi-clock"></i> ${new Date(props.start).toLocaleString()}</div>
+          ${props.subject_code ? `<div><i class="bi bi-journal-bookmark"></i> ${props.subject_code}</div>` : ""}
+          ${props.description ? `<div style="color:var(--num-ink-500);">${props.description}</div>` : ""}
+        </div>`;
+      if (IS_ADMIN) {
+        footer.innerHTML = `<button class="btn btn-num-soft w-100" id="btnDeleteEvent" style="color:#ef4444;">Delete Event</button>`;
+        document.getElementById("btnDeleteEvent").onclick = () => apiPost(`/calendar/events/${props.db_id}/delete/`, {}).then(() => { detailsModal.hide(); calendar.refetchEvents(); });
+      }
+    }
+    detailsModal.show();
+  }
+
+  {% if is_admin %}
+  document.getElementById("addEventForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    apiPost("{% url 'calendar_app:event_create' %}", Object.fromEntries(new FormData(this))).then((res) => {
+      if (res.ok) { bootstrap.Modal.getInstance(document.getElementById("addEventModal")).hide(); this.reset(); calendar.refetchEvents(); }
+    });
+  });
+  document.getElementById("addSectionForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    apiPost("{% url 'calendar_app:section_create' %}", Object.fromEntries(new FormData(this))).then((res) => {
+      if (res.ok) { bootstrap.Modal.getInstance(document.getElementById("addSectionModal")).hide(); this.reset(); calendar.refetchEvents(); }
+    });
+  });
+  {% endif %}
+});
+</script>
+{% endblock %}

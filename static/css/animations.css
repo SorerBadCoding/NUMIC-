@@ -1,0 +1,223 @@
+/* ==========================================================================
+   NUM Student Portal — motion system
+   Loads after theme.css. Premium, subtle, GPU-cheap (transform/opacity only).
+   Every effect here is disabled/short-circuited under prefers-reduced-motion.
+   ========================================================================== */
+
+:root {
+  --ease-out-smooth: cubic-bezier(.16, 1, .3, 1);   /* expo-out, Linear/Stripe-like deceleration */
+  --ease-in-out-smooth: cubic-bezier(.65, 0, .35, 1);
+  --ease-spring-soft: cubic-bezier(.34, 1.2, .64, 1);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Page transition: fade + slide up on every load                         */
+/* ---------------------------------------------------------------------- */
+/* Note: the native `@view-transition { navigation: auto }` CSS API was
+   evaluated here but dropped — it's Chromium-only and was observed to hang
+   headless-browser screenshot/automation pipelines mid-transition. This
+   CSS-only entrance animation is safer and works in every browser. */
+
+.num-shell {
+  animation: num-shell-in .5s var(--ease-out-smooth) both;
+}
+@keyframes num-shell-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Card hover: lift + soft glow (applies to every interactive card)       */
+/* ---------------------------------------------------------------------- */
+
+.num-card {
+  transition: transform .32s var(--ease-out-smooth), box-shadow .32s var(--ease-out-smooth);
+}
+
+/* Explicitly-interactive cards (marked .hoverable) get the full lift+glow */
+.num-card.hoverable {
+  cursor: pointer;
+}
+.num-card.hoverable:hover,
+.num-card.hoverable:focus-within {
+  transform: translateY(-4px);
+  box-shadow:
+    var(--shadow-md),
+    0 16px 36px -16px rgba(47, 111, 237, .22);
+}
+
+/* Non-interactive container cards still get a gentle glow, no jump */
+.num-card:not(.hoverable):hover {
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(47, 111, 237, .04);
+}
+
+/* Discrete list-row style cards (class schedule rows, building rows, etc.) */
+.num-class-card {
+  transition: transform .28s var(--ease-out-smooth), box-shadow .28s var(--ease-out-smooth), border-color .28s var(--ease-out-smooth);
+}
+.num-class-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(47, 111, 237, .18);
+  box-shadow: 0 10px 24px -14px rgba(47, 111, 237, .28);
+}
+button.num-class-card,
+.num-class-card.building-item {
+  text-align: left;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Buttons: scale on hover + ripple host                                  */
+/* ---------------------------------------------------------------------- */
+
+.btn-num-primary,
+.btn-num-soft {
+  position: relative;
+  overflow: hidden;
+  transition: transform .22s var(--ease-out-smooth), box-shadow .22s var(--ease-out-smooth), background .22s var(--ease-out-smooth);
+}
+.btn-num-primary:hover { transform: translateY(-1px) scale(1.02); box-shadow: var(--shadow-md), 0 10px 24px -10px rgba(47,111,237,.45); }
+.btn-num-primary:active { transform: translateY(0) scale(.98); }
+.btn-num-soft:hover { transform: scale(1.015); }
+.btn-num-soft:active { transform: scale(.98); }
+
+.num-icon-btn,
+.num-nav-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.num-ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  pointer-events: none;
+  background: rgba(47, 111, 237, .16);
+  animation: num-ripple-anim .6s var(--ease-out-smooth);
+}
+.btn-num-primary .num-ripple { background: rgba(255, 255, 255, .45); }
+@keyframes num-ripple-anim {
+  to { transform: scale(1); opacity: 0; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Nav: glass intensify on scroll + item micro-interaction                */
+/* ---------------------------------------------------------------------- */
+
+.num-nav {
+  transition: background .3s var(--ease-out-smooth), box-shadow .3s var(--ease-out-smooth);
+}
+.num-nav.scrolled {
+  background: rgba(255, 255, 255, .95);
+  box-shadow: var(--shadow-lg);
+}
+
+.num-nav-link i { display: inline-block; transition: transform .25s var(--ease-out-smooth); }
+.num-nav-link:hover i { transform: translateX(1px) scale(1.1); }
+.num-nav-link.active i { color: var(--num-blue-600); }
+
+.num-brand-mark { transition: transform .3s var(--ease-spring-soft); }
+.num-brand:hover .num-brand-mark { transform: rotate(-4deg) scale(1.06); }
+
+.num-avatar { transition: transform .25s var(--ease-out-smooth), box-shadow .25s var(--ease-out-smooth); }
+.num-avatar:hover { transform: scale(1.06); box-shadow: 0 6px 18px -6px rgba(47,111,237,.5); }
+
+/* ---------------------------------------------------------------------- */
+/* Hero: slow animated gradient sheen                                     */
+/* ---------------------------------------------------------------------- */
+
+.num-hero {
+  background-size: 160% 160%;
+  will-change: background-position;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .num-hero {
+    animation: num-hero-gradient 14s ease-in-out infinite alternate;
+  }
+}
+@keyframes num-hero-gradient {
+  0%   { background-position: 0% 30%; }
+  50%  { background-position: 100% 70%; }
+  100% { background-position: 40% 0%; }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Scroll reveal (below-the-fold cards fade up as they enter view)        */
+/* ---------------------------------------------------------------------- */
+
+.reveal-pending {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .6s var(--ease-out-smooth), transform .6s var(--ease-out-smooth);
+}
+.reveal-pending.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Loading skeletons                                                       */
+/* ---------------------------------------------------------------------- */
+
+.num-skeleton-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: rgba(255, 255, 255, .82);
+  backdrop-filter: blur(2px);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity .35s var(--ease-out-smooth);
+}
+.num-skeleton-overlay.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.num-skeleton-block {
+  position: relative;
+  overflow: hidden;
+  background: var(--num-ink-100);
+  border-radius: var(--radius-sm);
+}
+.num-skeleton-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .8), transparent);
+  animation: num-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes num-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+.num-skeleton-spinner {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 3px solid var(--num-ink-100);
+  border-top-color: var(--num-blue-500);
+  animation: num-spin .7s linear infinite;
+}
+@keyframes num-spin { to { transform: rotate(360deg); } }
+
+.num-skeleton-label {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12.5px; font-weight: 600; color: var(--num-ink-500);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Accessibility: respect prefers-reduced-motion globally                 */
+/* ---------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .num-hero { background-position: 0 0 !important; }
+}
