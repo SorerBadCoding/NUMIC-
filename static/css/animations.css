@@ -18,12 +18,19 @@
    headless-browser screenshot/automation pipelines mid-transition. This
    CSS-only entrance animation is safer and works in every browser. */
 
+/* Opacity-only — deliberately NOT a transform. A `transform`-animating
+   element keeps acting as the containing block for any position: fixed
+   descendant for as long as the animation holds via fill-mode (confirmed
+   empirically: even a final keyframe of `transform: none` didn't clear it,
+   contrary to what the spec's wording alone would suggest) — which broke
+   the mobile bottom nav's `position: fixed` (it was anchoring to .num-shell,
+   which scrolls, instead of the viewport). Opacity carries no such risk. */
 .num-shell {
-  animation: num-shell-in .5s var(--ease-out-smooth) both;
+  animation: num-shell-in .4s var(--ease-out-smooth) both;
 }
 @keyframes num-shell-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ---------------------------------------------------------------------- */
