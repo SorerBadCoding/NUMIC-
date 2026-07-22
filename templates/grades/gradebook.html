@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}{{ section.subject.name }} Gradebook — NUM Student Portal{% endblock %}
+{% block content %}
+
+<div class="num-page-head">
+  <div>
+    <div class="num-eyebrow">{{ section.subject.code }} · {{ section.get_weekday_display }} {{ section.duration_label }}</div>
+    <div class="num-page-title">{{ section.subject.name }} — Gradebook</div>
+    <div class="num-page-sub">
+      {{ section.academic_term }} · {% if section.room %}Room {{ section.room.code }}{% else %}TBA{% endif %} · {{ rows|length }} student{{ rows|length|pluralize }}
+    </div>
+  </div>
+  <a href="{% url 'grades:teacher_classes' %}" class="btn btn-num-soft"><i class="bi bi-arrow-left"></i> My Classes</a>
+</div>
+
+{% if rows %}
+
+<!-- Desktop / tablet (>=768px): table -->
+<div class="num-card num-card-pad d-none d-md-block" data-no-reveal>
+  <div class="num-scroll-x">
+    <table class="num-table w-100">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Assignments <span class="fw-normal">(20%)</span></th>
+          <th>Midterm <span class="fw-normal">(30%)</span></th>
+          <th>Final <span class="fw-normal">(50%)</span></th>
+          <th class="text-center">Total</th>
+          <th class="text-center">Grade</th>
+          <th class="text-center">GPA</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>
+            <div class="fw-semibold">{{ row.student.get_full_name }}</div>
+            <div style="font-size:12px; color:var(--num-ink-500);">{{ row.student.student_profile.student_id }}</div>
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm gb-input" min="0" max="100" step="0.1" inputmode="decimal"
+                   data-enrollment="{{ row.enrollment.id }}" data-field="assignment_score"
+                   value="{{ row.assignment_score|default_if_none:'' }}" aria-label="Assignment score for {{ row.student.get_full_name }}">
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm gb-input" min="0" max="100" step="0.1" inputmode="decimal"
+                   data-enrollment="{{ row.enrollment.id }}" data-field="midterm_score"
+                   value="{{ row.midterm_score|default_if_none:'' }}" aria-label="Midterm score for {{ row.student.get_full_name }}">
+          </td>
+          <td>
+            <input type="number" class="form-control form-control-sm gb-input" min="0" max="100" step="0.1" inputmode="decimal"
+                   data-enrollment="{{ row.enrollment.id }}" data-field="final_score"
+                   value="{{ row.final_score|default_if_none:'' }}" aria-label="Final score for {{ row.student.get_full_name }}">
+          </td>
+          <td class="text-center fw-semibold gb-total" data-enrollment="{{ row.enrollment.id }}">{{ row.total_score|default:"—" }}</td>
+          <td class="text-center"><span class="num-badge bg-tint-purple gb-letter" data-enrollment="{{ row.enrollment.id }}">{{ row.letter_grade }}</span></td>
+          <td class="text-center gb-gpa" data-enrollment="{{ row.enrollment.id }}">{{ row.gpa_points|default:"—" }}</td>
+          <td><span class="gb-status" data-enrollment="{{ row.enrollment.id }}"></span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Mobile (<768px): one card per student -->
+<div class="d-md-none d-flex flex-column gap-3">
+  {% for row in rows %}
+  <div class="num-card num-card-pad gb-card" data-no-reveal>
+    <div class="gb-card-header">
+      <div class="gb-card-student">
+        {{ row.student.get_full_name }}
+        <small>{{ row.student.student_profile.student_id }}</small>
+      </div>
+      <span class="gb-status" data-enrollment="{{ row.enrollment.id }}"></span>
+    </div>
+
+    <div class="gb-field-grid">
+      <div class="gb-field">
+        <label for="gb-a-{{ row.enrollment.id }}">Assignment</label>
+        <input id="gb-a-{{ row.enrollment.id }}" type="number" class="form-control gb-input" min="0" max="100" step="0.1" inputmode="decimal"
+               data-enrollment="{{ row.enrollment.id }}" data-field="assignment_score"
+               value="{{ row.assignment_score|default_if_none:'' }}">
+      </div>
+      <div class="gb-field">
+        <label for="gb-m-{{ row.enrollment.id }}">Midterm</label>
+        <input id="gb-m-{{ row.enrollment.id }}" type="number" class="form-control gb-input" min="0" max="100" step="0.1" inputmode="decimal"
+               data-enrollment="{{ row.enrollment.id }}" data-field="midterm_score"
+               value="{{ row.midterm_score|default_if_none:'' }}">
+      </div>
+      <div class="gb-field">
+        <label for="gb-f-{{ row.enrollment.id }}">Final</label>
+        <input id="gb-f-{{ row.enrollment.id }}" type="number" class="form-control gb-input" min="0" max="100" step="0.1" inputmode="decimal"
+               data-enrollment="{{ row.enrollment.id }}" data-field="final_score"
+               value="{{ row.final_score|default_if_none:'' }}">
+      </div>
+    </div>
+
+    <div class="gb-summary">
+      <div class="gb-summary-item"><span class="label">Total</span><span class="value gb-total" data-enrollment="{{ row.enrollment.id }}">{{ row.total_score|default:"—" }}</span></div>
+      <div class="gb-summary-item"><span class="label">Grade</span><span class="value gb-letter" data-enrollment="{{ row.enrollment.id }}">{{ row.letter_grade }}</span></div>
+      <div class="gb-summary-item"><span class="label">GPA</span><span class="value gb-gpa" data-enrollment="{{ row.enrollment.id }}">{{ row.gpa_points|default:"—" }}</span></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="num-card num-empty">No students enrolled in this class yet.</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const csrftoken = "{{ csrf_token }}";
+  const SAVE_URL_BASE = "{% url 'grades:gradebook_save' section.id %}";
+
+  function fieldsFor(enrollmentId) {
+    return document.querySelectorAll(`.gb-input[data-enrollment="${enrollmentId}"]`);
+  }
+
+  function syncField(enrollmentId, field, value) {
+    fieldsFor(enrollmentId).forEach((input) => {
+      if (input.dataset.field === field && input.value !== value) input.value = value;
+    });
+  }
+
+  function setStatus(enrollmentId, kind, message) {
+    document.querySelectorAll(`.gb-status[data-enrollment="${enrollmentId}"]`).forEach((el) => {
+      el.textContent = message;
+      el.className = "gb-status " + (kind === "ok" ? "gb-status-ok" : "gb-status-err");
+      el.style.opacity = "1";
+      clearTimeout(el._hideTimer);
+      if (kind === "ok") {
+        el._hideTimer = setTimeout(() => { el.style.opacity = "0"; }, 1800);
+      }
+    });
+  }
+
+  function clearFieldError(enrollmentId, field) {
+    fieldsFor(enrollmentId).forEach((input) => {
+      if (input.dataset.field === field) input.classList.remove("is-invalid");
+    });
+  }
+
+  function markFieldError(enrollmentId, field) {
+    fieldsFor(enrollmentId).forEach((input) => {
+      if (input.dataset.field === field) input.classList.add("is-invalid");
+    });
+  }
+
+  function saveEnrollment(enrollmentId) {
+    const values = {};
+    fieldsFor(enrollmentId).forEach((input) => { values[input.dataset.field] = input.value; });
+
+    const form = new FormData();
+    form.append("enrollment_id", enrollmentId);
+    form.append("assignment_score", values.assignment_score || "");
+    form.append("midterm_score", values.midterm_score || "");
+    form.append("final_score", values.final_score || "");
+
+    fetch(SAVE_URL_BASE, { method: "POST", headers: { "X-CSRFToken": csrftoken }, body: form })
+      .then((r) => r.json().then((data) => ({ status: r.status, data })))
+      .then(({ status, data }) => {
+        ["assignment_score", "midterm_score", "final_score"].forEach((f) => clearFieldError(enrollmentId, f));
+        if (status === 200 && data.ok) {
+          document.querySelectorAll(`.gb-total[data-enrollment="${enrollmentId}"]`).forEach((el) => {
+            el.textContent = data.total_score !== null ? data.total_score : "—";
+          });
+          document.querySelectorAll(`.gb-letter[data-enrollment="${enrollmentId}"]`).forEach((el) => {
+            el.textContent = data.letter_grade;
+          });
+          document.querySelectorAll(`.gb-gpa[data-enrollment="${enrollmentId}"]`).forEach((el) => {
+            el.textContent = data.gpa_points !== null ? data.gpa_points : "—";
+          });
+          setStatus(enrollmentId, "ok", "Saved");
+        } else {
+          const firstField = Object.keys(data.errors || {})[0];
+          if (firstField) markFieldError(enrollmentId, firstField);
+          setStatus(enrollmentId, "err", (data.errors && data.errors[firstField]) || "Couldn't save");
+        }
+      })
+      .catch(() => setStatus(enrollmentId, "err", "Network error"));
+  }
+
+  document.querySelectorAll(".gb-input").forEach((input) => {
+    input.addEventListener("change", function () {
+      syncField(this.dataset.enrollment, this.dataset.field, this.value);
+      saveEnrollment(this.dataset.enrollment);
+    });
+  });
+})();
+</script>
+{% endblock %}
