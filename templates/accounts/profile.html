@@ -32,24 +32,37 @@
         {% endif %}
       </div>
     </div>
+
+    <div class="num-card num-card-pad mt-3 text-start">
+      <div class="num-section-title mb-2">Preferences</div>
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-moon-stars" style="font-size:16px; color:var(--num-ink-500);"></i>
+          <span class="fw-semibold" style="font-size:13.5px;">Dark Mode</span>
+        </div>
+        <button type="button" class="num-theme-switch" data-theme-toggle aria-pressed="false" aria-label="Toggle dark mode">
+          <span class="num-theme-switch-thumb"></span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="col-lg-8">
     {% if profile %}
     <div class="row g-3 mb-3">
-      <div class="col-4">
+      <div class="col-6 col-sm-4">
         <div class="num-card hoverable num-stat-tile">
           <div class="num-stat-icon bg-tint-blue"><i class="bi bi-bar-chart"></i></div>
           <div><div class="num-stat-value">{{ gpa|default:"—" }}</div><div class="num-stat-label">GPA</div></div>
         </div>
       </div>
-      <div class="col-4">
+      <div class="col-6 col-sm-4">
         <div class="num-card hoverable num-stat-tile">
           <div class="num-stat-icon bg-tint-green"><i class="bi bi-check2-circle"></i></div>
           <div><div class="num-stat-value">{% if attendance_pct is not None %}{{ attendance_pct }}%{% else %}—{% endif %}</div><div class="num-stat-label">Attendance</div></div>
         </div>
       </div>
-      <div class="col-4">
+      <div class="col-6 col-sm-4">
         <div class="num-card hoverable num-stat-tile">
           <div class="num-stat-icon bg-tint-purple"><i class="bi bi-journal-bookmark"></i></div>
           <div><div class="num-stat-value">{{ subjects|length }}</div><div class="num-stat-label">Subjects</div></div>

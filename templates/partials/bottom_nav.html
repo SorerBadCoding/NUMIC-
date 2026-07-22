@@ -1,0 +1,44 @@
+<nav class="num-bottom-nav" aria-label="Primary">
+  <div class="num-bottom-nav-inner">
+    <a href="{% url 'accounts:dashboard_redirect' %}" class="num-bottom-tab {% if active_nav == 'dashboard' %}active{% endif %}">
+      <i class="bi bi-grid-1x2"></i>
+      <span>Home</span>
+    </a>
+    <a href="{% url 'calendar_app:view' %}" class="num-bottom-tab {% if active_nav == 'calendar' %}active{% endif %}">
+      <i class="bi bi-calendar3"></i>
+      <span>Calendar</span>
+    </a>
+
+    {% if user.is_student %}
+    <a href="{% url 'attendance:scan' %}" class="num-bottom-tab-scan-wrap" aria-label="Scan attendance QR code">
+      <span class="num-bottom-tab-scan {% if active_nav == 'attendance' %}active{% endif %}"><i class="bi bi-qr-code-scan"></i></span>
+    </a>
+    {% else %}
+    <a href="{% url 'attendance:home' %}" class="num-bottom-tab-scan-wrap" aria-label="Attendance">
+      <span class="num-bottom-tab-scan {% if active_nav == 'attendance' %}active{% endif %}"><i class="bi bi-qr-code-scan"></i></span>
+    </a>
+    {% endif %}
+
+    {% if user.is_student %}
+    <a href="{% url 'grades:view' %}" class="num-bottom-tab {% if active_nav == 'grades' %}active{% endif %}">
+      <i class="bi bi-bar-chart"></i>
+      <span>Grades</span>
+    </a>
+    {% elif user.is_teacher %}
+    <a href="{% url 'grades:teacher_classes' %}" class="num-bottom-tab {% if active_nav == 'teacher_classes' %}active{% endif %}">
+      <i class="bi bi-clipboard-data"></i>
+      <span>Classes</span>
+    </a>
+    {% else %}
+    <a href="{% url 'academics:subject_list' %}" class="num-bottom-tab {% if active_nav == 'subjects' %}active{% endif %}">
+      <i class="bi bi-journal-bookmark"></i>
+      <span>Subjects</span>
+    </a>
+    {% endif %}
+
+    <a href="{% url 'accounts:profile' %}" class="num-bottom-tab {% if active_nav == 'profile' %}active{% endif %}">
+      <i class="bi bi-person"></i>
+      <span>Profile</span>
+    </a>
+  </div>
+</nav>

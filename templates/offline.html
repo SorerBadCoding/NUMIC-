@@ -1,0 +1,57 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You're offline — NUM Student Portal</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    background: linear-gradient(180deg, #eef2fb 0%, #f4f6fb 40%, #eef1f7 100%);
+    color: #0f1729;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .offline-card {
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 40px 28px;
+    box-shadow: 0 24px 48px -16px rgba(15, 23, 41, .18);
+  }
+  .offline-card img { width: 64px; height: 64px; border-radius: 16px; margin-bottom: 18px; }
+  h1 { font-size: 19px; font-weight: 800; margin: 0 0 8px; }
+  p { font-size: 14px; color: #64748b; margin: 0 0 22px; line-height: 1.5; }
+  button {
+    background: linear-gradient(135deg, #2f6fed 0%, #6ea8fe 55%, #8f7bf6 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 11px 22px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  @media (prefers-color-scheme: dark) {
+    html, body { background: linear-gradient(180deg, #0c1222 0%, #0f1626 44%, #0b1120 100%); color: #eef2fb; }
+    .offline-card { background: #151d31; box-shadow: 0 24px 48px -16px rgba(0, 0, 0, .55); }
+    p { color: #8794ad; }
+  }
+</style>
+</head>
+<body>
+  <div class="offline-card">
+    <img src="{% static 'img/icon-192.png' %}" alt="NUM">
+    <h1>You're offline</h1>
+    <p>We can't reach the NUM Student Portal right now. Check your connection and try again.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>

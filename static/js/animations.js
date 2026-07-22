@@ -55,8 +55,11 @@
   /* ---------------------------------------------------------------- */
 
   function initEntranceAndReveal() {
+    // [data-no-reveal] opts a card out of the fade/stagger system entirely —
+    // for dense, task-focused lists (e.g. the gradebook) where every row
+    // needs to be immediately visible and interactive, not gated on scroll.
     var cards = Array.prototype.slice.call(
-      document.querySelectorAll(".num-shell .num-card, .num-shell > .num-page-head")
+      document.querySelectorAll(".num-shell .num-card:not([data-no-reveal]), .num-shell > .num-page-head")
     );
     var hero = document.querySelector(".num-hero");
     var viewportH = window.innerHeight;

@@ -3,8 +3,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from . import views
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("manifest.webmanifest", views.manifest_view, name="manifest"),
+    path("sw.js", views.service_worker_view, name="service_worker"),
+    path("offline/", views.offline_view, name="offline"),
     path("", include("accounts.urls")),
     path("calendar/", include("calendar_app.urls")),
     path("attendance/", include("attendance.urls")),

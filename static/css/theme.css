@@ -4,6 +4,8 @@
    ========================================================================== */
 
 :root {
+  color-scheme: light;
+
   --num-blue-50:  #eef4ff;
   --num-blue-100: #dde9ff;
   --num-blue-200: #b8d0ff;
@@ -24,8 +26,23 @@
   --num-purple: #8b5cf6;
   --num-cyan:   #0ea5e9;
 
+  --num-tint-green-bg:  #e7f9f1; --num-tint-green-fg:  #0a9a5b;
+  --num-tint-amber-bg:  #fef3e2; --num-tint-amber-fg:  #b96f04;
+  --num-tint-purple-bg: #f1ecfe; --num-tint-purple-fg: #6d3ff0;
+  --num-tint-cyan-bg:   #e6f7ff; --num-tint-cyan-fg:   #0a86c2;
+  --num-tint-red-bg:    #fdecec; --num-tint-red-fg:    #d32f2f;
+
   --num-gradient: linear-gradient(135deg, #2f6fed 0%, #6ea8fe 55%, #8f7bf6 100%);
   --num-gradient-soft: linear-gradient(135deg, rgba(47,111,237,.10) 0%, rgba(143,123,246,.10) 100%);
+
+  --num-nav-bg:     rgba(255, 255, 255, .82);
+  --num-nav-border: rgba(255, 255, 255, .6);
+  --num-card-border: rgba(15, 23, 41, .05);
+
+  --num-page-bg:
+    radial-gradient(1200px 600px at 8% -10%, rgba(143,123,246,.16), transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%, rgba(47,111,237,.14), transparent 55%),
+    linear-gradient(180deg, #eef2fb 0%, #f4f6fb 40%, #eef1f7 100%);
 
   --radius-xl: 24px;
   --radius-lg: 18px;
@@ -39,6 +56,50 @@
   --ease: cubic-bezier(.4, 0, .2, 1);
 }
 
+/* ---------------------------------------------------------------------- */
+/* Dark palette — same tokens, same class names, no layout changes.       */
+/* Set on <html data-theme="dark"> by the inline pre-paint script (base.html) */
+/* and the toggle in app.js. See theme.css bottom-nav / print sections for */
+/* the couple of spots that intentionally stay fixed-color in both modes.  */
+/* ---------------------------------------------------------------------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --num-blue-50:  rgba(79, 134, 255, .16);
+  --num-blue-100: rgba(79, 134, 255, .24);
+  --num-blue-200: rgba(79, 134, 255, .34);
+  --num-blue-500: #4f86ff;
+  --num-blue-600: #6ea8fe;
+  --num-blue-700: #9dc4ff;
+
+  --num-ink-900: #eef2fb;
+  --num-ink-700: #c3cddf;
+  --num-ink-500: #8794ad;
+  --num-ink-300: #5a6683;
+  --num-ink-100: rgba(255, 255, 255, .10);
+  --num-ink-50:  #1a2338;
+  --num-white:   #151d31;
+
+  --num-tint-green-bg:  rgba(18, 183, 106, .16); --num-tint-green-fg:  #4ade95;
+  --num-tint-amber-bg:  rgba(245, 158, 11, .16); --num-tint-amber-fg:  #fbbf53;
+  --num-tint-purple-bg: rgba(139, 92, 246, .18); --num-tint-purple-fg: #b09bff;
+  --num-tint-cyan-bg:   rgba(14, 165, 233, .16);  --num-tint-cyan-fg:  #63c6ff;
+  --num-tint-red-bg:    rgba(239, 68, 68, .16);   --num-tint-red-fg:   #ff8585;
+
+  --num-nav-bg:     rgba(19, 26, 44, .78);
+  --num-nav-border: rgba(255, 255, 255, .08);
+  --num-card-border: rgba(255, 255, 255, .07);
+
+  --num-page-bg:
+    radial-gradient(1200px 600px at 8% -10%, rgba(143,123,246,.24), transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%, rgba(47,111,237,.20), transparent 55%),
+    linear-gradient(180deg, #0c1222 0%, #0f1626 44%, #0b1120 100%);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .28), 0 1px 1px rgba(0, 0, 0, .18);
+  --shadow-md: 0 8px 24px -8px rgba(0, 0, 0, .45), 0 2px 8px -2px rgba(0, 0, 0, .3);
+  --shadow-lg: 0 24px 48px -16px rgba(0, 0, 0, .55), 0 4px 12px -2px rgba(0, 0, 0, .35);
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -48,12 +109,10 @@ html, body {
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--num-ink-900);
-  background:
-    radial-gradient(1200px 600px at 8% -10%, rgba(143,123,246,.16), transparent 60%),
-    radial-gradient(1000px 500px at 100% 0%, rgba(47,111,237,.14), transparent 55%),
-    linear-gradient(180deg, #eef2fb 0%, #f4f6fb 40%, #eef1f7 100%);
+  background: var(--num-page-bg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  transition: background-color .3s var(--ease), color .3s var(--ease);
 }
 
 a { text-decoration: none; color: inherit; }
@@ -72,10 +131,10 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   align-items: center;
   gap: 20px;
-  background: rgba(255, 255, 255, .82);
+  background: var(--num-nav-bg);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, .6);
+  border: 1px solid var(--num-nav-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   padding: 10px 18px;
@@ -111,6 +170,8 @@ a { text-decoration: none; color: inherit; }
 }
 
 .num-brand-mark:has(img) {
+  /* Fixed white, not themed: the logo asset itself is a white circular badge,
+     so this must stay white to match it regardless of page theme. */
   background: #fff;
   padding: 2px;
 }
@@ -167,6 +228,12 @@ a { text-decoration: none; color: inherit; }
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  /* On desktop .num-nav-links' flex:1 already pushes this to the right edge.
+     On mobile that spacer is display:none (see bottom-nav section below), so
+     without this, .num-nav-actions is the sole item on its wrapped flex row
+     and sits at the LEFT instead — dragging the right:0-anchored notification
+     dropdown off the left edge of the screen with it. */
+  margin-left: auto;
 }
 
 .num-icon-btn {
@@ -180,7 +247,7 @@ a { text-decoration: none; color: inherit; }
   background: transparent;
   border: 1px solid transparent;
   position: relative;
-  transition: background .15s var(--ease), border-color .15s var(--ease);
+  transition: background .15s var(--ease), border-color .15s var(--ease), color .15s var(--ease);
 }
 .num-icon-btn:hover {
   background: var(--num-ink-100);
@@ -195,7 +262,7 @@ a { text-decoration: none; color: inherit; }
   height: 8px;
   border-radius: 50%;
   background: var(--num-red);
-  border: 2px solid #fff;
+  border: 2px solid var(--num-white);
 }
 
 .num-avatar {
@@ -218,7 +285,7 @@ a { text-decoration: none; color: inherit; }
 
 .num-card {
   background: var(--num-white);
-  border: 1px solid rgba(15, 23, 41, .05);
+  border: 1px solid var(--num-card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   transition: box-shadow .2s var(--ease), transform .2s var(--ease);
@@ -301,12 +368,12 @@ a { text-decoration: none; color: inherit; }
   font-weight: 600;
 }
 
-.bg-tint-blue   { background: var(--num-blue-50);   color: var(--num-blue-600); }
-.bg-tint-green  { background: #e7f9f1; color: #0a9a5b; }
-.bg-tint-amber  { background: #fef3e2; color: #b96f04; }
-.bg-tint-purple { background: #f1ecfe; color: #6d3ff0; }
-.bg-tint-cyan   { background: #e6f7ff; color: #0a86c2; }
-.bg-tint-red    { background: #fdecec; color: #d32f2f; }
+.bg-tint-blue   { background: var(--num-blue-50);        color: var(--num-blue-600); }
+.bg-tint-green  { background: var(--num-tint-green-bg);  color: var(--num-tint-green-fg); }
+.bg-tint-amber  { background: var(--num-tint-amber-bg);  color: var(--num-tint-amber-fg); }
+.bg-tint-purple { background: var(--num-tint-purple-bg); color: var(--num-tint-purple-fg); }
+.bg-tint-cyan   { background: var(--num-tint-cyan-bg);   color: var(--num-tint-cyan-fg); }
+.bg-tint-red    { background: var(--num-tint-red-bg);    color: var(--num-tint-red-fg); }
 
 /* Class / schedule cards */
 .num-class-card {
@@ -438,10 +505,42 @@ a { text-decoration: none; color: inherit; }
   justify-content: space-between;
   margin-bottom: 16px;
 }
-.fc { --fc-border-color: var(--num-ink-100); --fc-today-bg-color: var(--num-blue-50); font-family: inherit; }
+.fc {
+  --fc-border-color: var(--num-ink-100);
+  --fc-today-bg-color: var(--num-blue-50);
+  --fc-neutral-bg-color: var(--num-ink-50);
+  --fc-list-event-hover-bg-color: var(--num-ink-50);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-text-color: var(--num-ink-500);
+  font-family: inherit;
+}
 .fc .fc-toolbar.fc-header-toolbar { display: none; }
 .fc-event { border: none !important; border-radius: 8px !important; padding: 1px 4px; font-size: 11.5px; font-weight: 600; }
+.fc-event-title, .fc-event-main { overflow-wrap: break-word; }
 .fc-daygrid-day-number, .fc-col-header-cell-cushion { color: var(--num-ink-700); font-weight: 600; font-size: 12.5px; }
+.fc .num-fc-cancelled { text-decoration: line-through; opacity: .65; }
+
+/* Mobile day-agenda list view (see calendar_app/view.html) */
+.fc-list-day-cushion { color: var(--num-ink-700); }
+.fc-list-event-time { color: var(--num-ink-500); font-size: 12.5px; }
+.fc-list-event-dot { border-width: 5px !important; }
+.fc-list-empty { color: var(--num-ink-500); background: transparent; }
+.num-cal-list-title { font-weight: 600; font-size: 13.5px; color: var(--num-ink-900); }
+.num-cal-list-sub { font-size: 12px; color: var(--num-ink-500); margin-top: 2px; }
+
+/* Horizontal-scroll safety net: if a wide grid view ever renders on a narrow
+   screen, it scrolls within its own box instead of clipping off-screen. Only
+   applies to grid views — the mobile list/agenda view is a plain vertical
+   list and doesn't need it (toggled via .is-list-view, set in datesSet). */
+.num-calendar-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 767.98px) {
+  .num-calendar-scroll:not(.is-list-view) #calendar {
+    min-width: 700px;
+  }
+}
 
 /* Notifications dropdown */
 .num-dropdown {
@@ -449,17 +548,31 @@ a { text-decoration: none; color: inherit; }
   right: 0;
   top: 48px;
   width: 340px;
+  max-width: calc(100vw - 24px);
   max-height: 420px;
   overflow-y: auto;
-  background: #fff;
+  background: var(--num-white);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--num-ink-100);
   display: none;
-  z-index: 60;
+  /* Well above ordinary page content/cards (which don't set z-index) but
+     below Bootstrap's modal backdrop (1040) / modal (1050), so an open
+     dropdown never fights with a modal. .num-nav's own z-index/positioning
+     doesn't matter here since z-index is compared within the nearest shared
+     stacking context, not the immediate DOM parent. */
+  z-index: 500;
+  transition: background-color .25s var(--ease), border-color .25s var(--ease);
 }
 .num-dropdown.show { display: block; animation: num-pop .15s var(--ease); }
 @keyframes num-pop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 767.98px) {
+  /* Belt-and-suspenders: below 768px the bell is a plain link to the full
+     notifications page (see base.html / app.js) and never toggles ".show",
+     but force-hide regardless in case anything ever adds the class. */
+  .num-dropdown { display: none !important; }
+}
 
 .num-notif-item { display: flex; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--num-ink-50); }
 .num-notif-item:last-child { border-bottom: none; }
@@ -485,7 +598,9 @@ a { text-decoration: none; color: inherit; }
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--num-ink-900);
+  /* Fixed dark, not themed: this pill always sits on the QR box below, which
+     stays white in both themes (a QR code needs a white quiet zone to scan). */
+  background: #0f1729;
   color: #fff;
   font-size: 11.5px;
   font-weight: 700;
@@ -519,6 +634,144 @@ a { text-decoration: none; color: inherit; }
   .num-nav-link { padding: 8px 11px; font-size: 12.5px; }
   .num-shell { padding: 14px 12px 48px; }
   .num-hero { padding: 22px; }
+}
+
+/* ==========================================================================
+   Theme toggle (sun/moon icon-button + Profile page switch)
+   Visual state is driven entirely by [data-theme="dark"] on <html>, set by
+   the inline pre-paint script + app.js — never by JS-toggled classes here,
+   so there's no flash between the pre-paint state and the CSS.
+   ========================================================================== */
+
+.num-theme-icon-dark { display: none; }
+[data-theme="dark"] .num-theme-icon-light { display: none; }
+[data-theme="dark"] .num-theme-icon-dark { display: inline-flex; }
+
+.num-theme-switch {
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--num-ink-100);
+  border: 1px solid var(--num-ink-100);
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background-color .2s var(--ease), border-color .2s var(--ease);
+}
+.num-theme-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--num-blue-600);
+  transition: transform .25s var(--ease-spring-soft, var(--ease));
+}
+[data-theme="dark"] .num-theme-switch { background: var(--num-blue-500); border-color: var(--num-blue-500); }
+[data-theme="dark"] .num-theme-switch-thumb { transform: translateX(18px); }
+
+.num-theme-switch:focus-visible {
+  outline: 2px solid var(--num-blue-500);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Bottom navigation (mobile, < 768px)
+   Same glass treatment as the top .num-nav; hides .num-nav-links and floats
+   a fixed 5-tab bar instead. Center "Scan" tab is a raised circular button.
+   ========================================================================== */
+
+.num-bottom-nav {
+  display: none;
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 50;
+  background: var(--num-nav-bg);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid var(--num-nav-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 6px 8px;
+  transition: background-color .3s var(--ease), border-color .3s var(--ease);
+}
+
+.num-bottom-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.num-bottom-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1;
+  padding: 8px 2px 6px;
+  border-radius: var(--radius-md);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--num-ink-500);
+  transition: background .15s var(--ease), color .15s var(--ease);
+}
+.num-bottom-tab i { font-size: 19px; line-height: 1; }
+.num-bottom-tab:hover,
+.num-bottom-tab:focus-visible {
+  background: var(--num-ink-100);
+  color: var(--num-ink-900);
+}
+.num-bottom-tab.active { color: var(--num-blue-600); }
+
+.num-bottom-tab-scan-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  border-radius: 50%;
+}
+.num-bottom-tab-scan {
+  width: 52px;
+  height: 52px;
+  margin-top: -26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--num-gradient);
+  color: #fff;
+  font-size: 21px;
+  border: 4px solid var(--num-white);
+  box-shadow: var(--shadow-lg), 0 6px 18px -4px rgba(47, 111, 237, .55);
+  transition: transform .2s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease);
+}
+.num-bottom-tab-scan-wrap:hover .num-bottom-tab-scan,
+.num-bottom-tab-scan-wrap:focus-visible .num-bottom-tab-scan {
+  transform: scale(1.06);
+}
+.num-bottom-tab-scan.active {
+  box-shadow: var(--shadow-lg), 0 0 0 3px var(--num-blue-200);
+}
+
+.num-bottom-tab:focus-visible,
+.num-bottom-tab-scan-wrap:focus-visible {
+  outline: 2px solid var(--num-blue-500);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767.98px) {
+  .num-nav-links { display: none !important; }
+  .num-bottom-nav { display: block; }
+  .num-shell { padding-bottom: 104px; }
 }
 
 /* ==========================================================================
@@ -808,7 +1061,19 @@ a { text-decoration: none; color: inherit; }
 }
 
 @media print {
-  .num-nav, .num-page-head, .id-card-actions, .id-card-alert { display: none !important; }
+  /* Force the light palette regardless of data-theme — printing the dark
+     palette would put light-colored text on the forced-white page below. */
+  :root, [data-theme="dark"] {
+    --num-white: #ffffff;
+    --num-ink-900: #0f1729;
+    --num-ink-700: #33415c;
+    --num-ink-500: #64748b;
+    --num-ink-300: #cbd5e1;
+    --num-ink-100: #eef1f6;
+    --num-ink-50:  #f7f9fc;
+    --num-card-border: rgba(15, 23, 41, .05);
+  }
+  .num-nav, .num-bottom-nav, .num-page-head, .id-card-actions, .id-card-alert { display: none !important; }
   body { background: #fff !important; }
   .num-shell { padding: 0 !important; }
   .id-card { box-shadow: none !important; animation: none !important; opacity: 1 !important; transform: none !important; }
@@ -839,3 +1104,91 @@ a { text-decoration: none; color: inherit; }
   .id-card-stage { animation: none !important; }
   .id-card-qr-wrap { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
+
+/* ==========================================================================
+   Teacher Gradebook
+   ========================================================================== */
+
+.gb-input {
+  width: 84px;
+  text-align: center;
+}
+.gb-input.is-invalid {
+  border-color: var(--num-red);
+}
+
+/* Mobile per-student card layout */
+.gb-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gb-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.gb-card-student {
+  font-weight: 700;
+  font-size: 14.5px;
+}
+.gb-card-student small {
+  display: block;
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--num-ink-500);
+}
+
+.gb-field-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.gb-field label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--num-ink-500);
+  margin-bottom: 4px;
+}
+.gb-field input {
+  width: 100%;
+  text-align: center;
+  min-height: 42px;
+}
+
+.gb-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--num-ink-100);
+}
+.gb-summary-item {
+  text-align: center;
+}
+.gb-summary-item .label {
+  display: block;
+  font-size: 10.5px;
+  color: var(--num-ink-500);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.gb-summary-item .value {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.gb-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  transition: opacity .3s var(--ease);
+  opacity: 0;
+  white-space: nowrap;
+}
+.gb-status-ok { background: var(--num-tint-green-bg); color: var(--num-tint-green-fg); }
+.gb-status-err { background: var(--num-tint-red-bg); color: var(--num-tint-red-fg); }

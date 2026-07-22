@@ -31,7 +31,12 @@
 /* ---------------------------------------------------------------------- */
 
 .num-card {
-  transition: transform .32s var(--ease-out-smooth), box-shadow .32s var(--ease-out-smooth);
+  transition:
+    transform .32s var(--ease-out-smooth),
+    box-shadow .32s var(--ease-out-smooth),
+    background-color .25s var(--ease-out-smooth),
+    border-color .25s var(--ease-out-smooth),
+    color .25s var(--ease-out-smooth);
 }
 
 /* Explicitly-interactive cards (marked .hoverable) get the full lift+glow */
@@ -73,7 +78,11 @@ button.num-class-card,
 .btn-num-soft {
   position: relative;
   overflow: hidden;
-  transition: transform .22s var(--ease-out-smooth), box-shadow .22s var(--ease-out-smooth), background .22s var(--ease-out-smooth);
+  transition:
+    transform .22s var(--ease-out-smooth),
+    box-shadow .22s var(--ease-out-smooth),
+    background .22s var(--ease-out-smooth),
+    color .22s var(--ease-out-smooth);
 }
 .btn-num-primary:hover { transform: translateY(-1px) scale(1.02); box-shadow: var(--shadow-md), 0 10px 24px -10px rgba(47,111,237,.45); }
 .btn-num-primary:active { transform: translateY(0) scale(.98); }
@@ -104,11 +113,14 @@ button.num-class-card,
 /* ---------------------------------------------------------------------- */
 
 .num-nav {
-  transition: background .3s var(--ease-out-smooth), box-shadow .3s var(--ease-out-smooth);
+  transition: background .3s var(--ease-out-smooth), box-shadow .3s var(--ease-out-smooth), border-color .3s var(--ease-out-smooth);
 }
 .num-nav.scrolled {
   background: rgba(255, 255, 255, .95);
   box-shadow: var(--shadow-lg);
+}
+[data-theme="dark"] .num-nav.scrolled {
+  background: rgba(19, 26, 44, .95);
 }
 
 .num-nav-link i { display: inline-block; transition: transform .25s var(--ease-out-smooth); }
@@ -202,7 +214,10 @@ button.num-class-card,
   align-items: center;
   justify-content: center;
   opacity: 1;
-  transition: opacity .35s var(--ease-out-smooth);
+  transition: opacity .35s var(--ease-out-smooth), background-color .25s var(--ease-out-smooth);
+}
+[data-theme="dark"] .num-skeleton-overlay {
+  background: rgba(21, 29, 49, .82);
 }
 .num-skeleton-overlay.is-hidden {
   opacity: 0;
