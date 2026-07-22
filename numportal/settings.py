@@ -159,8 +159,8 @@ GOOGLE_MAPS_API_KEY = os.environ.get("GOOGLE_MAPS_API_KEY", "")
 
 # National University of Management - Veal Sbov Campus, Phnom Penh, Cambodia.
 CAMPUS_NAME = "National University of Management — Veal Sbov Campus"
-CAMPUS_LATITUDE = 11.4941
-CAMPUS_LONGITUDE = 104.9106
+CAMPUS_LATITUDE = float(os.environ.get("CAMPUS_LATITUDE", "11.522554"))
+CAMPUS_LONGITUDE = float(os.environ.get("CAMPUS_LONGITUDE", "104.965866"))
 # Attendance is only accepted inside this radius of the campus center (meters).
 CAMPUS_ATTENDANCE_RADIUS_METERS = 150
 

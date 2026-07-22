@@ -11,6 +11,7 @@ class RoomInline(admin.TabularInline):
 @admin.register(Building)
 class BuildingAdmin(admin.ModelAdmin):
     list_display = ("code", "name", "category", "latitude", "longitude")
+    list_editable = ("latitude", "longitude")
     list_filter = ("category",)
     inlines = [RoomInline]
 
