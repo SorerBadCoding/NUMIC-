@@ -91,12 +91,22 @@ class Command(BaseCommand):
         today = timezone.localdate()
 
         # -- Buildings & rooms ------------------------------------------------
+        # get_or_create (not create): campus.0002_update_campus_coordinates
+        # creates these same building codes when run against an empty table,
+        # and on a fresh database `migrate` always runs before `seed_data`
+        # (see railway.json) — so a plain .create() here would collide with
+        # the unique `code` constraint. Reusing the existing row also means
+        # the migration's real campus coordinates win over this dict's
+        # jittered placeholder offsets, which is the correct outcome anyway.
         buildings = {}
         for b in BUILDINGS:
-            building = Building.objects.create(
-                code=b["code"], name=b["name"], category=b["category"],
-                latitude=settings.CAMPUS_LATITUDE + b["dy"], longitude=settings.CAMPUS_LONGITUDE + b["dx"],
-                departments=b["departments"], opening_hours=b["hours"], description=b["desc"],
+            building, _ = Building.objects.get_or_create(
+                code=b["code"],
+                defaults=dict(
+                    name=b["name"], category=b["category"],
+                    latitude=settings.CAMPUS_LATITUDE + b["dy"], longitude=settings.CAMPUS_LONGITUDE + b["dx"],
+                    departments=b["departments"], opening_hours=b["hours"], description=b["desc"],
+                ),
             )
             buildings[b["code"]] = building
 
