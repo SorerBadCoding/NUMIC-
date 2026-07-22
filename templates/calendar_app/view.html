@@ -42,7 +42,9 @@
   </div>
 
   <div style="position:relative;">
-    <div id="calendar"></div>
+    <div class="num-calendar-scroll" id="calendarScroll">
+      <div id="calendar"></div>
+    </div>
     <div class="num-skeleton-overlay" id="calSkeleton">
       <div class="num-skeleton-label"><span class="num-skeleton-spinner"></span> Loading calendar…</div>
     </div>
@@ -151,17 +153,45 @@ function apiPost(url, data) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Move modals to be direct children of <body> before instantiating them.
+  // Why: .num-shell (their ancestor) runs a `transform`-animating entrance
+  // animation with `animation-fill-mode: both` (see static/css/animations.css),
+  // which means its computed `transform` never returns to `none` even after
+  // the animation finishes. Per spec, any ancestor with a non-`none` transform
+  // (or filter/backdrop-filter/will-change: transform) becomes the containing
+  // block for `position: fixed` descendants — so these modals were anchoring
+  // to .num-shell's box instead of the viewport, opening in the wrong spot and
+  // leaving an invisible fixed-position layer sized/positioned against the
+  // wrong box, which intercepted clicks after the modal was supposedly closed.
+  // <body> has no such property, so this restores correct viewport anchoring.
+  ["detailsModal", "addEventModal", "addSectionModal"].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) document.body.appendChild(el);
+  });
+
   const calendarEl = document.getElementById("calendar");
+  const calScroll = document.getElementById("calendarScroll");
   const calSkeleton = document.getElementById("calSkeleton");
   const detailsModal = new bootstrap.Modal(document.getElementById("detailsModal"));
 
+  // Below 768px the 7-column time grid doesn't fit a phone screen (columns
+  // get squeezed until event text clips mid-word), so default to a vertical
+  // day-agenda list instead. Desktop keeps the full weekly grid unchanged.
+  const isMobile = window.matchMedia("(max-width: 767.98px)").matches;
+  const weekViewName = isMobile ? "listDay" : "timeGridWeek";
+  const weekBtn = document.getElementById("viewWeek");
+  if (isMobile) weekBtn.textContent = "Day";
+
   const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: "timeGridWeek",
+    initialView: weekViewName,
     headerToolbar: false,
     height: "auto",
     slotMinTime: "06:00:00",
     slotMaxTime: "20:00:00",
     nowIndicator: true,
+    listDayFormat: { weekday: "long", month: "long", day: "numeric" },
+    listDaySideFormat: false,
+    noEventsText: "No classes or events this day.",
     loading: function (isLoading) {
       if (!calSkeleton) return;
       isLoading ? window.NumAnim.showSkeleton(calSkeleton) : window.NumAnim.hideSkeleton(calSkeleton);
@@ -175,8 +205,42 @@ document.addEventListener("DOMContentLoaded", function () {
         }))))
         .catch(failure);
     },
+    eventClassNames: function (arg) {
+      return arg.event.extendedProps.cancelled ? ["num-fc-cancelled"] : [];
+    },
+    // Grid views (desktop) replicate FullCalendar's own default title markup;
+    // the list/agenda view (mobile) gets a custom title + room/teacher line.
+    // Built with textContent (not innerHTML) since event titles can come from
+    // the admin "Add Event" form.
+    eventContent: function (arg) {
+      if (arg.view.type.startsWith("list")) {
+        const props = arg.event.extendedProps;
+        const meta = [];
+        if (props.room) meta.push(props.room + (props.building ? ", " + props.building : ""));
+        if (props.teacher) meta.push(props.teacher);
+        if (!props.room && props.subject_code) meta.push(props.subject_code);
+
+        const wrap = document.createElement("div");
+        const titleEl = document.createElement("div");
+        titleEl.className = "num-cal-list-title";
+        titleEl.textContent = arg.event.title;
+        wrap.appendChild(titleEl);
+        if (meta.length) {
+          const subEl = document.createElement("div");
+          subEl.className = "num-cal-list-sub";
+          subEl.textContent = meta.join(" · ");
+          wrap.appendChild(subEl);
+        }
+        return { domNodes: [wrap] };
+      }
+      const titleEl = document.createElement("div");
+      titleEl.className = "fc-event-title fc-sticky";
+      titleEl.textContent = arg.event.title;
+      return { domNodes: [titleEl] };
+    },
     datesSet: function (info) {
       document.getElementById("calTitle").textContent = info.view.title;
+      if (calScroll) calScroll.classList.toggle("is-list-view", info.view.type.startsWith("list"));
     },
     eventClick: function (info) {
       showDetails(info.event.extendedProps);
@@ -187,7 +251,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("calToday").onclick = () => calendar.today();
   document.getElementById("calPrev").onclick = () => calendar.prev();
   document.getElementById("calNext").onclick = () => calendar.next();
-  document.getElementById("viewWeek").onclick = (e) => { calendar.changeView("timeGridWeek"); toggleViewBtn(e.target); };
+  weekBtn.onclick = (e) => { calendar.changeView(weekViewName); toggleViewBtn(e.target); };
   document.getElementById("viewMonth").onclick = (e) => { calendar.changeView("dayGridMonth"); toggleViewBtn(e.target); };
   function toggleViewBtn(btn) {
     document.querySelectorAll("#viewWeek, #viewMonth").forEach(b => b.classList.remove("active"));
